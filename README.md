@@ -141,13 +141,13 @@ package and add that package as a dev dependency of the target app.
 
 All tasks accept `-c <path>` / `--config <path>`.
 
-| Task | What it does |
-|------|--------------|
-| `mix startpro.config.init` | Creates the config file with example profiles. Refuses to overwrite an existing file unless you pass `--force`. |
-| `mix startpro.config.edit` | Opens the config file in `$EDITOR` (or `$VISUAL`), then checks that it still loads. |
-| `mix startpro.list.profiles` | Lists every profile and the profiles it uses. |
-| `mix startpro.list.steps <PROFILE>` | Shows the fully expanded, numbered step list, with the profile each step came from. |
-| `mix startpro.run <PROFILE>` | Applies the profile to the current app and commits the result. Accepts a `--flag` for every `if:` in the profile, plus `--no-commit`. |
+| Task                                | What it does                                                                                                                          |
+|-------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `mix startpro.config.init`          | Creates the config file with example profiles. Refuses to overwrite an existing file unless you pass `--force`.                       |
+| `mix startpro.config.edit`          | Opens the config file in `$EDITOR` (or `$VISUAL`), then checks that it still loads.                                                   |
+| `mix startpro.list.profiles`        | Lists every profile and the profiles it uses.                                                                                         |
+| `mix startpro.list.steps <PROFILE>` | Shows the fully expanded, numbered step list, with the profile each step came from.                                                   |
+| `mix startpro.run <PROFILE>`        | Applies the profile to the current app and commits the result. Accepts a `--flag` for every `if:` in the profile, plus `--no-commit`. |
 
 ## Git commits: how a run is recorded
 
