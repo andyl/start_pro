@@ -2,10 +2,6 @@
 
 Application profiles for Elixir [Starter](https://github.com/jamilabreu/starter).
 
-> **Status:** in development. This README describes the intended behavior.
-> See `_spec/features/260926_starter-profiles.md` and
-> `_spec/plans/260926_starter-profiles.md`.
-
 `startpro` is a companion package to `starter`. It lets you keep your starter
 step lists as named **profiles** in one config file outside your projects,
 such as `~/.config/startpro/profiles.exs`. You can then apply any profile to a
@@ -131,23 +127,99 @@ Because the first occurrence wins, put "finishing" steps like
 `{:gen, :sort_deps}` in their own profile and `use` it last. Don't put them
 inside a baseline profile.
 
-### Custom steps
+### Custom steps and starter modules
 
 A profile can name a custom step module, such as `MyTeam.Steps.Presence`, but
 the step's code can't live in the config file. Put custom steps in their own
 package and add that package as a dev dependency of the target app.
 
+`{:starter, Module}` includes are expanded by `startpro` itself, so they get
+the same include-once, de-duplication, cycle checks and origin tags as
+`{:use, ...}`. Where the module isn't loaded (for example, `list.steps` run
+outside the app that depends on it), the include is shown unexpanded and
+`starter` expands it at run time. `mix startpro.run` checks that every custom
+step and starter module exists in the app before it starts, and names the
+profile that refers to a missing one.
+
 ## Tasks
 
-All tasks accept `-c <path>` / `--config <path>`.
+Every task accepts `-c <path>` / `--config <path>`.
 
 | Task                                | What it does                                                                                                                          |
 |-------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | `mix startpro.config.init`          | Creates the config file with example profiles. Refuses to overwrite an existing file unless you pass `--force`.                       |
-| `mix startpro.config.edit`          | Opens the config file in `$EDITOR` (or `$VISUAL`), then checks that it still loads.                                                   |
+| `mix startpro.config.edit`          | Opens the config file in `$EDITOR` (or `$VISUAL`), then checks that every profile still loads and resolves.                          |
 | `mix startpro.list.profiles`        | Lists every profile and the profiles it uses.                                                                                         |
 | `mix startpro.list.steps <PROFILE>` | Shows the fully expanded, numbered step list, with the profile each step came from.                                                   |
 | `mix startpro.run <PROFILE>`        | Applies the profile to the current app and commits the result. Accepts a `--flag` for every `if:` in the profile, plus `--no-commit`. |
+
+Profile names on the command line treat `-` and `_` as the same, so
+`standard-app` finds `standard_app`.
+
+### `mix startpro.config.init`
+
+```sh
+$ mix startpro.config.init
+Created /home/you/.config/startpro/profiles.exs
+```
+
+The template documents every step form and defines `phoenix_cleanup`,
+`phoenix_defaults`, `tooling`, `jobs`, `deploy_gigalixir`, `finish`, and a
+`standard_app` profile that composes them.
+
+### `mix startpro.config.edit`
+
+Terminal editors (vim, nvim, nano) work as-is. GUI editors must be told to
+wait for the file to close, e.g. `EDITOR="code --wait"`. If the saved file
+doesn't validate, you get a warning and the file is left as you saved it.
+
+### `mix startpro.list.profiles`
+
+```
+$ mix startpro.list.profiles
+Profiles in /home/you/.config/startpro/profiles.exs:
+
+  phoenix_cleanup
+  phoenix_defaults
+  tooling
+  jobs
+  deploy_gigalixir
+  finish
+  standard_app      (uses: phoenix_cleanup, phoenix_defaults, tooling, jobs, deploy_gigalixir if :gigalixir, finish)
+```
+
+### `mix startpro.list.steps <PROFILE>`
+
+Follows every gated include, so it shows everything the profile *can* run.
+Steps reached through a gated include are marked `if :flag`, and steps
+dropped as duplicates are listed at the end.
+
+```
+$ mix startpro.list.steps standard_app
+Profile standard_app (/home/you/.config/startpro/profiles.exs):
+
+   1. {:remove, :agents_md}  [phoenix_cleanup]
+   ...
+  21. {:add, :oban_pro, if: :oban_pro}  [jobs]
+  22. {:gen, :gigalixir}  [deploy_gigalixir] if :gigalixir
+  23. {:gen, :gigalixir_libcluster}  [deploy_gigalixir] if :gigalixir
+  24. {:gen, :ecto_force_drop}  [finish]
+  25. {:gen, :sort_deps}  [finish]
+
+Flags: --gigalixir --exsync --mix-test-watch --oban-pro
+```
+
+### `mix startpro.run <PROFILE>`
+
+```sh
+mix startpro.run standard_app --gigalixir --dry-run   # preview the diff
+mix startpro.run standard_app --gigalixir             # apply and commit
+mix startpro.run standard_app --no-commit             # no git checks, no commit
+```
+
+`--dry-run` and `--yes` work as for any Igniter task. Flags named after
+`startpro.run`'s own options (`config`, `no_commit`) or Igniter's global
+options (`yes`, `dry_run`, `verbose`, ...) can't be used as profile flags.
 
 ## Git commits: how a run is recorded
 

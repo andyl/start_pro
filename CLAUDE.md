@@ -5,9 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project status
 
 `startpro` is a companion Mix package to [`starter`](https://github.com/jamilabreu/starter)
-(v0.5.x). The repo is currently a `mix new` skeleton (`Startpro.hello/0` stub,
-no deps); the design is fully specified but not yet implemented. The README
-describes the *intended* behavior. Before writing code, read:
+(v0.5.x). v1 is implemented per the plan below. Design background:
 
 - `_spec/features/260926_starter-profiles.md` — feature spec
 - `_spec/plans/260926_starter-profiles.md` — implementation plan (numbered
@@ -28,12 +26,12 @@ mix test test/startpro/resolver_test.exs:42  # one test by line
 mix format
 ```
 
-Planned (per the plan, step 1): `elixir: "~> 1.17"` in `mix.exs` (currently
-`~> 1.20` from the generator), deps `{:starter, "~> 0.5"}` (brings in Igniter)
-and `ex_doc`, and `import_deps: [:igniter]` in `.formatter.exs`. No Hex
-`package/0` — distributed only as a `path:`/`git:` dependency.
+`elixir: "~> 1.17"`, deps `{:starter, "~> 0.5"}` (brings in Igniter) and
+`ex_doc`. No Hex `package/0` — distributed only as a `path:`/`git:`
+dependency. `test/support/fixtures` holds deliberately broken configs and is
+excluded from `mix format` inputs.
 
-## Architecture (planned)
+## Architecture
 
 What it does: loads named step-list **profiles** from one external `.exs`
 config file, expands `{:use, :name}` / `{:use, :name, if: :flag}` includes
@@ -68,7 +66,11 @@ Data flow for `mix startpro.run <PROFILE>`:
    target isn't a git repo or the tree is dirty (checked before the runner's
    dep pre-fetch writes anything), then queues the internal
    `mix startpro.git.commit --message-file <tmp>` via `Igniter.add_task/3` so
-   it runs last, only if the diff is applied.
+   it runs last, only if the diff is applied. Igniter runs queued tasks via
+   the shell with args space-joined, so the path is shell-quoted if needed.
+   Dry runs don't write the temp file; stale ones (>1h) are swept each run.
+   `info/2` pre-scans argv itself (`CLI.prescan/1`) because `OptionParser`
+   swallows a positional that follows an unknown `--flag`.
 
 Conventions from the plan:
 
@@ -78,6 +80,8 @@ Conventions from the plan:
   `Atom.to_string/1` of config keys, treating `-` and `_` as equal.
 - The editor (`config.edit`) is launched via a `Port` with `:nouse_stdio`,
   behind a replaceable function for tests.
+- Steps are displayed with `Resolver.format_step/1` (`Macro.to_string`), not
+  `inspect/1`, so `{:add, :x, if: :f}` prints as written.
 - Commit message: subject `startpro: apply profile <name>` (<72 chars), plain
   numbered lines (no bullets) listing config path, flags, and steps with origin.
 - Default config template lives in `priv/templates/profiles.exs`.
@@ -88,5 +92,7 @@ Conventions from the plan:
   them and use `async: false`.
 - Git tests use `@tag :tmp_dir` with a real `git init`.
 - The `run` integration test uses `Igniter.Test.test_project/0` with only
-  built-in `:gen`/`:remove` steps (installs are inert in test mode), and must
-  not depend on this repo's own working-tree state.
+  built-in `:gen` steps (installs are inert in test mode), and `File.cd!`s
+  into a tmp-dir repo so it doesn't depend on this repo's working tree.
+  ExUnit's `tmp_dir` is inside this repo, so "not a repo" tests use a dir
+  under `System.tmp_dir!/0`.
