@@ -1,21 +1,21 @@
-defmodule Mix.Tasks.Startpro.Run do
-  @shortdoc "Applies a startpro profile to the current app and commits it"
+defmodule Mix.Tasks.StartPro.Run do
+  @shortdoc "Applies a start_pro profile to the current app and commits it"
 
   @moduledoc """
   Resolves a profile and applies it to the current app with `starter`'s
   engine, then records the run as one git commit.
 
-      mix startpro.run standard_app
-      mix startpro.run standard_app --gigalixir --oban-pro
-      mix startpro.run standard_app --dry-run
-      mix startpro.run standard_app --no-commit
+      mix start_pro.run standard_app
+      mix start_pro.run standard_app --gigalixir --oban-pro
+      mix start_pro.run standard_app --dry-run
+      mix start_pro.run standard_app --no-commit
 
   Every `if:` flag in the profile, whether on a step or on an include,
-  becomes a `--flag` option. `mix startpro.list.steps PROFILE` shows them.
+  becomes a `--flag` option. `mix start_pro.list.steps PROFILE` shows them.
 
   ## Requirements
 
-  Both `startpro` and `starter` must be dependencies of the target app:
+  Both `start_pro` and `starter` must be dependencies of the target app:
   `starter` provides the runner and the built-in steps. No `mix starter.new`
   file or in-app starter module is needed. If an app has one anyway, the two
   don't interact, but running both would apply the steps twice.
@@ -44,7 +44,7 @@ defmodule Mix.Tasks.Startpro.Run do
 
   use Igniter.Mix.Task
 
-  alias Startpro.{CLI, Error, Git, Resolver}
+  alias StartPro.{CLI, Error, Git, Resolver}
 
   @base_schema [config: :string, no_commit: :boolean]
 
@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Startpro.Run do
       positional: [:profile],
       schema: @base_schema ++ flag_schema,
       aliases: [c: :config],
-      example: "mix startpro.run standard_app --gigalixir"
+      example: "mix start_pro.run standard_app --gigalixir"
     }
   end
 
@@ -92,14 +92,14 @@ defmodule Mix.Tasks.Startpro.Run do
     check_modules!(active)
     if commit?, do: check_git!()
 
-    igniter = Startpro.Starter.run(igniter, Resolver.steps_only(result), opts)
+    igniter = StartPro.Starter.run(igniter, Resolver.steps_only(result), opts)
 
     if commit? do
       flags = Enum.filter(Resolver.flags(all), &(Keyword.get(opts, &1) == true))
       message = Git.message(name, %{config: path, flags: flags}, active)
 
       file = write_message!(message, Keyword.get(opts, :dry_run, false))
-      Igniter.add_task(igniter, "startpro.git.commit", ["--message-file", file])
+      Igniter.add_task(igniter, "start_pro.git.commit", ["--message-file", file])
     else
       igniter
     end
@@ -156,7 +156,7 @@ defmodule Mix.Tasks.Startpro.Run do
   # The commit task deletes the file, but it never runs on a dry run, a
   # declined diff, or after a failed queued task. Dry runs don't write the
   # file at all, and files left behind by earlier runs are swept here.
-  @message_glob "startpro-commit-*.txt"
+  @message_glob "start_pro-commit-*.txt"
   @stale_after_seconds 3600
 
   defp write_message!(message, dry_run?) do

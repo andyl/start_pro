@@ -1,12 +1,12 @@
-defmodule Startpro.Git do
+defmodule StartPro.Git do
   @moduledoc """
-  Git support for `mix startpro.run`: the pre-flight status check, the commit
+  Git support for `mix start_pro.run`: the pre-flight status check, the commit
   message, and the commit itself.
   """
 
-  alias Startpro.Error
+  alias StartPro.Error
 
-  @subject_prefix "startpro: apply profile "
+  @subject_prefix "start_pro: apply profile "
   @subject_max 71
 
   @doc """
@@ -37,7 +37,7 @@ defmodule Startpro.Git do
   plain lines, numbered steps, no bullets.
   """
   @spec message(atom() | String.t(), %{config: Path.t(), flags: [atom()]}, [
-          Startpro.Resolver.entry()
+          StartPro.Resolver.entry()
         ]) :: String.t()
   def message(profile, %{config: config, flags: flags}, entries) do
     flags =
@@ -55,7 +55,7 @@ defmodule Startpro.Git do
           entries
           |> Enum.with_index(1)
           |> Enum.map_join("\n", fn {entry, n} ->
-            "#{n}. #{Startpro.Resolver.format_step(entry.step)} [#{Error.name(entry.origin)}]"
+            "#{n}. #{StartPro.Resolver.format_step(entry.step)} [#{Error.name(entry.origin)}]"
           end)
       end
 

@@ -1,12 +1,12 @@
-defmodule Mix.Tasks.Startpro.Config.Edit do
-  @shortdoc "Opens the startpro profiles config file in $EDITOR"
+defmodule Mix.Tasks.StartPro.Config.Edit do
+  @shortdoc "Opens the start_pro profiles config file in $EDITOR"
 
   @moduledoc """
   Opens the profiles config file in `$EDITOR` (or `$VISUAL`), then checks
   that every profile still loads and resolves.
 
-      mix startpro.config.edit
-      mix startpro.config.edit -c ~/dotfiles/startpro.exs
+      mix start_pro.config.edit
+      mix start_pro.config.edit -c ~/dotfiles/start_pro.exs
 
   Terminal editors inherit the terminal. GUI editors must be told to wait
   for the file to close, for example `EDITOR="code --wait"`.
@@ -21,7 +21,7 @@ defmodule Mix.Tasks.Startpro.Config.Edit do
 
   use Mix.Task
 
-  alias Startpro.{CLI, Config, Editor, Error, Resolver}
+  alias StartPro.{CLI, Config, Editor, Error, Resolver}
 
   @impl Mix.Task
   def run(argv) do
@@ -30,7 +30,7 @@ defmodule Mix.Tasks.Startpro.Config.Edit do
 
     unless File.regular?(path) do
       Mix.raise(
-        "Config file not found: #{path}\n\nCreate it with:\n\n    mix startpro.config.init"
+        "Config file not found: #{path}\n\nCreate it with:\n\n    mix start_pro.config.init"
       )
     end
 

@@ -1,13 +1,13 @@
-# startpro profiles
+# start_pro profiles
 #
-# WARNING: this file is Elixir code and is evaluated by startpro. Only use a
+# WARNING: this file is Elixir code and is evaluated by start_pro. Only use a
 # config file you wrote or trust.
 #
 # The file evaluates to a keyword list of `profile_name: [steps]`. Apply a
 # profile to the current app with:
 #
-#     mix startpro.list.steps standard_app     # preview the resolved steps
-#     mix startpro.run standard_app            # apply them and commit
+#     mix start_pro.list.steps standard_app     # preview the resolved steps
+#     mix start_pro.run standard_app            # apply them and commit
 #
 # ## Step forms
 #
@@ -31,7 +31,7 @@
 # ## Flags
 #
 # Tag a step with `if: :flag` to make it optional. It runs only when the flag
-# is passed, e.g. `mix startpro.run standard_app --oban-pro`.
+# is passed, e.g. `mix start_pro.run standard_app --oban-pro`.
 #
 # ## Including profiles
 #
@@ -45,7 +45,7 @@
 #
 # ## Git
 #
-# `mix startpro.run` refuses to start outside a git repository or in a dirty
+# `mix start_pro.run` refuses to start outside a git repository or in a dirty
 # work tree, and records each run as one commit listing every step. Pass
 # `--no-commit` to skip both.
 

@@ -2,12 +2,12 @@
 
 ## Overview
 
-`startpro` is a companion package to
+`start_pro` is a companion package to
 [`starter`](https://github.com/jamilabreu/starter). It adds **starter
 profiles**, which are named step lists kept in one external `.exs` config file
 outside any project codebase. A developer defines profiles such as `chat_app`
 or `voip_app` once. He can then apply any profile to a new Phoenix/Igniter
-project with `mix startpro.run <PROFILE>`. The developer no longer has to copy
+project with `mix start_pro.run <PROFILE>`. The developer no longer has to copy
 a starter module into each project or keep a separate step-pack Mix project
 just to hold a list.
 
@@ -18,7 +18,7 @@ The idea comes from `starter` issue #4
 - A step list is called a "profile", not an "app".
 - A `use:` directive lets one profile include another.
 
-The design intent is that **the profile is the source of truth**. `startpro`
+The design intent is that **the profile is the source of truth**. `start_pro`
 complements upstream `starter`'s "app owns its setup" model and does not
 replace it.
 
@@ -36,8 +36,8 @@ replace it.
 
 Success criteria:
 
-- A user can run `mix startpro.config.init`, edit the file, and run
-  `mix startpro.run <PROFILE>` in a fresh project. The result is the same as
+- A user can run `mix start_pro.config.init`, edit the file, and run
+  `mix start_pro.run <PROFILE>` in a fresh project. The result is the same as
   running an equivalent hand-written starter module.
 - Cyclic `use:` references are detected and reported before any step runs.
 
@@ -45,7 +45,7 @@ Success criteria:
 
 ### Config file
 
-- The default location is `~/.config/startpro/profiles.exs`.
+- The default location is `~/.config/start_pro/profiles.exs`.
 - Every task accepts `-c <config_file_path>` to override the location.
 - Only one config file is active for any command. Merging multiple config files
   is not supported.
@@ -73,11 +73,11 @@ Success criteria:
 
 | Task                                | Behavior                                                                                                                                                                         |
 |-------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `mix startpro.config.init`          | Creates a default config file with pre-populated example profiles. Refuses to overwrite an existing file unless a force option is given. Creates parent directories as needed.   |
-| `mix startpro.config.edit`          | Opens the config file in `$EDITOR` (falling back to `$VISUAL`, then reporting an error if neither is set). If no config file exists, suggests running `config.init`.             |
-| `mix startpro.list.profiles`        | Lists all profile names in the config file, with any profiles each one uses.                                                                                                     |
-| `mix startpro.list.steps <PROFILE>` | Prints the fully expanded, ordered step list for the profile, after `use:` resolution.                                                                                           |
-| `mix startpro.run <PROFILE>`        | Resolves the profile and runs its expanded steps through `starter`'s engine inside the current project. Forwards `starter` flags (e.g. `--flag`-style `if:` toggles) to the run. |
+| `mix start_pro.config.init`          | Creates a default config file with pre-populated example profiles. Refuses to overwrite an existing file unless a force option is given. Creates parent directories as needed.   |
+| `mix start_pro.config.edit`          | Opens the config file in `$EDITOR` (falling back to `$VISUAL`, then reporting an error if neither is set). If no config file exists, suggests running `config.init`.             |
+| `mix start_pro.list.profiles`        | Lists all profile names in the config file, with any profiles each one uses.                                                                                                     |
+| `mix start_pro.list.steps <PROFILE>` | Prints the fully expanded, ordered step list for the profile, after `use:` resolution.                                                                                           |
+| `mix start_pro.run <PROFILE>`        | Resolves the profile and runs its expanded steps through `starter`'s engine inside the current project. Forwards `starter` flags (e.g. `--flag`-style `if:` toggles) to the run. |
 
 - All tasks accept `-c <path>`.
 - All tasks print a helpful message and exit non-zero when the config file is
@@ -86,10 +86,10 @@ Success criteria:
 
 ## Non-Functional Requirements
 
-- **No upstream changes.** `startpro` must work against the published `starter`
+- **No upstream changes.** `start_pro` must work against the published `starter`
   package as a dependency. It adapts to the engine's module-based API where
   needed.
-- **Dev-only.** `startpro` is intended as an `only: :dev` dependency, the same
+- **Dev-only.** `start_pro` is intended as an `only: :dev` dependency, the same
   as `starter`.
 - **Safety.** The config file is trusted user-authored Elixir code. The docs
   must say plainly that it is evaluated.
@@ -100,14 +100,14 @@ Success criteria:
 
 ## Design / UX Notes
 
-- The CLI mirrors the naming in issue #4: `startpro.config.*`,
-  `startpro.list.*`, `startpro.run`.
+- The CLI mirrors the naming in issue #4: `start_pro.config.*`,
+  `start_pro.list.*`, `start_pro.run`.
 - The generated default config should be self-documenting. It should include
   comments that explain the step syntax, `use:`, `if:` flags, and custom step
   references, plus at least two example profiles where one `use:`s the other.
 - `list.steps` output should be readable and should show which profile each
   step came from, to help debug inheritance.
-- Consider having `startpro.run` optionally record the resolved step list into
+- Consider having `start_pro.run` optionally record the resolved step list into
   the target app (as a comment or file). That keeps upstream's "the app
   documents its own setup" benefit. See Open Questions.
 
@@ -125,7 +125,7 @@ Success criteria:
   - Mix tasks: the five tasks listed above, with shared `-c` option handling.
 - **Dependencies:** `starter` (and transitively `igniter`). No YAML or other
   parsing dependency is needed.
-- **Constraint:** `starter` (and `startpro`) must be deps of the target app,
+- **Constraint:** `starter` (and `start_pro`) must be deps of the target app,
   because Igniter runs inside the project. This is documented, not solved.
 
 ## Possible Edge Cases
@@ -145,19 +145,19 @@ Success criteria:
 - `-c` points to a nonexistent path or a directory.
 - `$EDITOR` is unset, or the editor command fails.
 - `config.init` runs when a config already exists.
-- `startpro.run` runs outside a Mix project, or in a project without `starter`
+- `start_pro.run` runs outside a Mix project, or in a project without `starter`
   as a dep.
 
 ## Acceptance Criteria
 
-- `mix startpro.config.init` creates `~/.config/startpro/profiles.exs` (or the
+- `mix start_pro.config.init` creates `~/.config/start_pro/profiles.exs` (or the
   `-c` path) with valid example profiles, and does not clobber an existing
   file without explicit force.
-- `mix startpro.config.edit` opens the active config in `$EDITOR`.
-- `mix startpro.list.profiles` lists every profile in the active config.
-- `mix startpro.list.steps <PROFILE>` shows the correctly ordered, fully
+- `mix start_pro.config.edit` opens the active config in `$EDITOR`.
+- `mix start_pro.list.profiles` lists every profile in the active config.
+- `mix start_pro.list.steps <PROFILE>` shows the correctly ordered, fully
   expanded steps, including steps pulled in through nested `use:`.
-- `mix startpro.run <PROFILE>` applies the expanded steps to the current
+- `mix start_pro.run <PROFILE>` applies the expanded steps to the current
   project through `starter`, and respects `if:` flags passed on the CLI.
 - Any cycle in `use:` references is rejected before execution, with a message
   that names the cycle path.
@@ -173,12 +173,12 @@ Success criteria:
   `{:use, :profile}` tuple placed inline in the step list, or a profile-level
   option (e.g. `chat_app: [use: [:base], steps: [...]]`). An inline tuple keeps
   ordering explicit. ANSWER: I like the inline tuple
-- Should `startpro.run` record the resolved step list into the target app for
-  documentation? If so, where and in what form?  ANSWER: the git commit log should do this.  I think (hope) that the `starter` app does a git commit after each step.  Please check this.  If not: let's decide if we should let 'startpro.run' task do a git commit after each step.
+- Should `start_pro.run` record the resolved step list into the target app for
+  documentation? If so, where and in what form?  ANSWER: the git commit log should do this.  I think (hope) that the `starter` app does a git commit after each step.  Please check this.  If not: let's decide if we should let 'start_pro.run' task do a git commit after each step.
 - Should profiles also be able to use `starter`'s `{:starter, Module}`
   includes, or should `use:` be the only inclusion mechanism?  ANSWER: yes, let's allow for {:starter, Module} 
 - Should the `STARTER_CONFIG`-style env var from the earlier discussion be
-  supported (e.g. `STARTPRO_CONFIG`) in addition to `-c`?  ANSWER: yes great idea - let's use STARTPRO_CONFIG environment variable
+  supported (e.g. `START_PRO_CONFIG`) in addition to `-c`?  ANSWER: yes great idea - let's use START_PRO_CONFIG environment variable
 - What should the pre-populated profiles in `config.init` contain?  ANSWER: something similar to what `starter` itself uses 
 
 ## Out of Scope
@@ -186,10 +186,10 @@ Success criteria:
 - Support for multiple or merged config files.
 - YAML, TOML or JSON config formats.
 - Defining custom step *code* inside the profile file.
-- A one-command bootstrap flow (e.g. `mix startpro.bootstrap my_app chat_app`
+- A one-command bootstrap flow (e.g. `mix start_pro.bootstrap my_app chat_app`
   that runs `igniter.new`/`phx.new`, adds deps, and runs the profile).
 - Changes to, or PRs against, the upstream `starter` package.
-- Removing the need to add `starter`/`startpro` as a dep of the target app.
+- Removing the need to add `starter`/`start_pro` as a dep of the target app.
 
 ## Testing Guidelines
 
@@ -205,5 +205,5 @@ Create meaningful tests for the following use cases, without going too heavy:
   overwrite an existing file.
 - `list.profiles` and `list.steps` produce the expected output for a fixture
   config.
-- `startpro.run` hands the correctly expanded step list to the `starter` engine
+- `start_pro.run` hands the correctly expanded step list to the `starter` engine
   (verified at the adapter boundary, without running real installers).

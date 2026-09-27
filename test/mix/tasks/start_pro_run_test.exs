@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Startpro.RunTest do
+defmodule Mix.Tasks.StartPro.RunTest do
   # Changes the VM's working directory (the git checks read File.cwd!/0) and
   # the adapter's :persistent_term.
   use ExUnit.Case, async: false
 
   import Igniter.Test
-  import Startpro.Test.GitHelpers
+  import StartPro.Test.GitHelpers
 
   @moduletag :tmp_dir
 
@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Startpro.RunTest do
 
   defp run(argv) do
     test_project(files: %{"mix.exs" => @mix_exs})
-    |> Igniter.compose_task("startpro.run", argv)
+    |> Igniter.compose_task("start_pro.run", argv)
   end
 
   defp assert_changed(igniter, path) do
@@ -64,12 +64,12 @@ defmodule Mix.Tasks.Startpro.RunTest do
   end
 
   defp commit_tasks(igniter) do
-    for {"startpro.git.commit", argv} <- igniter.tasks, do: argv
+    for {"start_pro.git.commit", argv} <- igniter.tasks, do: argv
   end
 
   defp clean_message_files do
     System.tmp_dir!()
-    |> Path.join("startpro-commit-*.txt")
+    |> Path.join("start_pro-commit-*.txt")
     |> Path.wildcard()
     |> Enum.each(&File.rm/1)
   end
@@ -105,11 +105,11 @@ defmodule Mix.Tasks.Startpro.RunTest do
   test "queues the commit last, with the message", %{config: config} do
     igniter = run(["app", "-c", config, "--force-drop"])
 
-    assert [{"foo.bar", ["--yes"]}, {"startpro.git.commit", ["--message-file", file]}] =
+    assert [{"foo.bar", ["--yes"]}, {"start_pro.git.commit", ["--message-file", file]}] =
              igniter.tasks
 
     assert File.read!(file) == """
-           startpro: apply profile app
+           start_pro: apply profile app
 
            Config: #{config}
            Flags: --force-drop
@@ -133,7 +133,7 @@ defmodule Mix.Tasks.Startpro.RunTest do
   end
 
   test "stale message files are swept", %{config: config} do
-    stale = Path.join(System.tmp_dir!(), "startpro-commit-stale.txt")
+    stale = Path.join(System.tmp_dir!(), "start_pro-commit-stale.txt")
     File.write!(stale, "x")
     File.touch!(stale, System.os_time(:second) - 7200)
 
@@ -155,7 +155,7 @@ defmodule Mix.Tasks.Startpro.RunTest do
   end
 
   test "refuses outside a git repo, unless --no-commit", %{config: config} do
-    outside = Path.join(System.tmp_dir!(), "startpro-run-#{System.unique_integer([:positive])}")
+    outside = Path.join(System.tmp_dir!(), "start_pro-run-#{System.unique_integer([:positive])}")
     File.mkdir_p!(outside)
     File.cd!(outside)
     on_exit(fn -> File.rm_rf!(outside) end)
@@ -171,21 +171,21 @@ defmodule Mix.Tasks.Startpro.RunTest do
   end
 
   test "info/2 publishes a boolean per flag", %{config: config} do
-    info = Mix.Tasks.Startpro.Run.info(["--force-drop", "app", "-c", config], nil)
+    info = Mix.Tasks.StartPro.Run.info(["--force-drop", "app", "-c", config], nil)
     assert info.positional == [:profile]
     assert info.schema[:force_drop] == :boolean
     assert info.schema[:no_commit] == :boolean
     assert info.aliases == [c: :config]
 
-    gated = Mix.Tasks.Startpro.Run.info(["gated", "-c", config], nil)
+    gated = Mix.Tasks.StartPro.Run.info(["gated", "-c", config], nil)
     assert gated.schema[:deploy] == :boolean
 
-    assert Mix.Tasks.Startpro.Run.info([], nil).schema == [config: :string, no_commit: :boolean]
+    assert Mix.Tasks.StartPro.Run.info([], nil).schema == [config: :string, no_commit: :boolean]
   end
 
   test "flags that collide with task options are rejected", %{config: config} do
     assert_raise Mix.Error, ~r/Flag :yes is reserved/, fn ->
-      Mix.Tasks.Startpro.Run.info(["reserved", "-c", config], nil)
+      Mix.Tasks.StartPro.Run.info(["reserved", "-c", config], nil)
     end
   end
 
@@ -195,6 +195,6 @@ defmodule Mix.Tasks.Startpro.RunTest do
 
   test "the adapter's step list is cleared after a run", %{config: config} do
     run(["app", "-c", config])
-    assert Startpro.Starter.steps() == []
+    assert StartPro.Starter.steps() == []
   end
 end

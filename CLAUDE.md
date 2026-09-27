@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-`startpro` is a companion Mix package to [`starter`](https://github.com/jamilabreu/starter)
+`start_pro` is a companion Mix package to [`starter`](https://github.com/jamilabreu/starter)
 (v0.5.x). v1 is implemented per the plan below. Design background:
 
 - `_spec/features/260926_starter-profiles.md` — feature spec
@@ -21,8 +21,8 @@ Spec files follow a `YYMMDD_name.md` naming convention under `_spec/{designs,fea
 mix deps.get
 mix compile
 mix test                                   # all tests
-mix test test/startpro/resolver_test.exs   # one file
-mix test test/startpro/resolver_test.exs:42  # one test by line
+mix test test/start_pro/resolver_test.exs   # one file
+mix test test/start_pro/resolver_test.exs:42  # one test by line
 mix format
 ```
 
@@ -40,14 +40,14 @@ existing engine, and records the run as one git commit in the target app.
 Upstream `starter` must not be modified, and `mix starter.new` / in-app starter
 modules are not used.
 
-Data flow for `mix startpro.run <PROFILE>`:
+Data flow for `mix start_pro.run <PROFILE>`:
 
-1. `Startpro.Config` resolves the path (`-c/--config` → `STARTPRO_CONFIG` →
-   `$XDG_CONFIG_HOME/startpro/profiles.exs` → `~/.config/startpro/profiles.exs`),
+1. `StartPro.Config` resolves the path (`-c/--config` → `START_PRO_CONFIG` →
+   `$XDG_CONFIG_HOME/start_pro/profiles.exs` → `~/.config/start_pro/profiles.exs`),
    `Code.eval_file`s it, and validates shape (keyword list or atom-keyed map of
    `name => [step]`). Only `:use` tuples are validated here; other step shapes
    are left for the upstream runner.
-2. `Startpro.Resolver` does a DFS over nodes `{:profile, name}` and
+2. `StartPro.Resolver` does a DFS over nodes `{:profile, name}` and
    `{:starter, module}` with separate "on-stack" and "done" sets (diamonds are
    not cycles). Returns entries `%{step:, origin:, gates:}` plus dropped
    `duplicates`. `flags: :all` walks every gated include (used for validation,
@@ -56,16 +56,16 @@ Data flow for `mix startpro.run <PROFILE>`:
    expands it. `run` always does a `:all` pass first. `{:starter, M}` includes
    are expanded via `M.steps()` when loadable, else passed through.
    De-dup: first occurrence wins; steps differing only in `if:` are distinct.
-3. `Startpro.Starter` is the engine adapter: a fixed module implementing the
+3. `StartPro.Starter` is the engine adapter: a fixed module implementing the
    `Starter` behaviour whose `steps/0` reads the resolved list from
    `:persistent_term` (set before `Starter.Runner.run/3`, erased in `after`).
    Chosen over `Module.create/3` to avoid runtime compilation.
-4. `mix startpro.run` is an `Igniter.Mix.Task` (single diff, confirm once,
+4. `mix start_pro.run` is an `Igniter.Mix.Task` (single diff, confirm once,
    `--yes`/`--dry-run`). Its `info/2` resolves the profile from argv to publish
    a boolean option per flag. Unless `--no-commit`, it refuses to start if the
    target isn't a git repo or the tree is dirty (checked before the runner's
    dep pre-fetch writes anything), then queues the internal
-   `mix startpro.git.commit --message-file <tmp>` via `Igniter.add_task/3` so
+   `mix start_pro.git.commit --message-file <tmp>` via `Igniter.add_task/3` so
    it runs last, only if the diff is applied. Igniter runs queued tasks via
    the shell with args space-joined, so the path is shell-quoted if needed.
    Dry runs don't write the temp file; stale ones (>1h) are swept each run.
@@ -75,20 +75,20 @@ Data flow for `mix startpro.run <PROFILE>`:
 Conventions from the plan:
 
 - Library functions return `{:ok, _} | {:error, reason}`; all reasons are
-  formatted by `Startpro.Error.message/1`; Mix tasks call `Mix.raise/1`.
+  formatted by `StartPro.Error.message/1`; Mix tasks call `Mix.raise/1`.
 - Never create atoms from user input — match profile names against
   `Atom.to_string/1` of config keys, treating `-` and `_` as equal.
 - The editor (`config.edit`) is launched via a `Port` with `:nouse_stdio`,
   behind a replaceable function for tests.
 - Steps are displayed with `Resolver.format_step/1` (`Macro.to_string`), not
   `inspect/1`, so `{:add, :x, if: :f}` prints as written.
-- Commit message: subject `startpro: apply profile <name>` (<72 chars), plain
+- Commit message: subject `start_pro: apply profile <name>` (<72 chars), plain
   numbered lines (no bullets) listing config path, flags, and steps with origin.
 - Default config template lives in `priv/templates/profiles.exs`.
 
 ## Testing notes
 
-- Tests touching env vars (`STARTPRO_CONFIG`, `XDG_CONFIG_HOME`) must restore
+- Tests touching env vars (`START_PRO_CONFIG`, `XDG_CONFIG_HOME`) must restore
   them and use `async: false`.
 - Git tests use `@tag :tmp_dir` with a real `git init`.
 - The `run` integration test uses `Igniter.Test.test_project/0` with only

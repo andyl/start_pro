@@ -1,4 +1,4 @@
-defmodule Startpro.Test.FakeStarter do
+defmodule StartPro.Test.FakeStarter do
   @moduledoc false
   @behaviour Starter
 
@@ -6,15 +6,15 @@ defmodule Startpro.Test.FakeStarter do
   def steps, do: [{:remove, :topbar}, {:gen, :gitignore}]
 end
 
-defmodule Startpro.Test.NestedStarter do
+defmodule StartPro.Test.NestedStarter do
   @moduledoc false
   @behaviour Starter
 
   @impl Starter
-  def steps, do: [{:starter, Startpro.Test.FakeStarter}, {:add, :credo}]
+  def steps, do: [{:starter, StartPro.Test.FakeStarter}, {:add, :credo}]
 end
 
-defmodule Startpro.Test.CyclicStarter do
+defmodule StartPro.Test.CyclicStarter do
   @moduledoc false
   @behaviour Starter
 
@@ -23,6 +23,6 @@ defmodule Startpro.Test.CyclicStarter do
   def steps, do: [{:use, :loop}]
 end
 
-defmodule Startpro.Test.NotAStarter do
+defmodule StartPro.Test.NotAStarter do
   @moduledoc false
 end

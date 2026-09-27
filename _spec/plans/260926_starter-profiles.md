@@ -9,19 +9,19 @@ rounds of open questions.
 
 ## Goal
 
-Build `startpro`, a companion Mix package to `starter` (v0.5.x). It loads named
+Build `start_pro`, a companion Mix package to `starter` (v0.5.x). It loads named
 step-list *profiles* from one external `.exs` file and expands `use:`
 inclusions, which can be flag-gated, into a flat, acyclic, de-duplicated step
 list. It runs that list through `starter`'s existing engine and records what
-ran as a git commit in the target app. A small family of `mix startpro.*`
+ran as a git commit in the target app. A small family of `mix start_pro.*`
 tasks manages the file.
 
 ## Scope
 
 ### In scope
-- Resolving the config path. The order is `-c`, then `STARTPRO_CONFIG`, then
-  `$XDG_CONFIG_HOME/startpro/profiles.exs`, then
-  `~/.config/startpro/profiles.exs`. The file is then loaded and its shape
+- Resolving the config path. The order is `-c`, then `START_PRO_CONFIG`, then
+  `$XDG_CONFIG_HOME/start_pro/profiles.exs`, then
+  `~/.config/start_pro/profiles.exs`. The file is then loaded and its shape
   validated.
 - A profile resolver. It handles inline `{:use, :name}` and flag-gated
   `{:use, :name, if: :flag}`, and it also expands `{:starter, Module}`
@@ -29,11 +29,11 @@ tasks manages the file.
   (first occurrence wins), and tags each step with its source profile.
 - An engine adapter that feeds a resolved list to `Starter.Runner.run/3`
   without any upstream changes.
-- A git commit that records each `startpro.run`, made once the run's changes
+- A git commit that records each `start_pro.run`, made once the run's changes
   are applied.
-- Five user-facing Mix tasks: `startpro.config.init`, `startpro.config.edit`,
-  `startpro.list.profiles`, `startpro.list.steps` and `startpro.run`. There is
-  also one internal task, `startpro.git.commit`.
+- Five user-facing Mix tasks: `start_pro.config.init`, `start_pro.config.edit`,
+  `start_pro.list.profiles`, `start_pro.list.steps` and `start_pro.run`. There is
+  also one internal task, `start_pro.git.commit`.
 - A self-documenting default config template, modeled on the starter file
   that `starter.new` generates.
 - A README and moduledocs. They must warn clearly that the config is
@@ -44,7 +44,7 @@ tasks manages the file.
 ### Out of scope
 - Multiple or merged config files, and YAML/TOML/JSON formats.
 - Custom step code inside the profile file.
-- A `startpro.bootstrap` one-command flow.
+- A `start_pro.bootstrap` one-command flow.
 - Any change to upstream `starter`.
 - Committing after *each step*. Decision 12 explains why. A possible
   `--commit-each` mode is listed as future work.
@@ -59,7 +59,7 @@ tasks manages the file.
   and composes each step into **one** Igniter diff that is confirmed once.
 - `Starter.flags/1` already accepts a **plain list** of steps.
 - The runner owns step validation: it rejects unknown `:remove`/`:gen` names
-  and catches likely typos in `:add` names. `startpro` does not duplicate that
+  and catches likely typos in `:add` names. `start_pro` does not duplicate that
   validation.
 - The runner supports only a single atom for `if:`. Upstream has no
   AND/OR of flags.
@@ -115,7 +115,7 @@ tasks manages the file.
    `run` always does a `:all` pass first, so a bad config fails before anything
    runs, whatever flags were given.
 
-5. **`{:starter, Module}` includes are allowed and expanded by `startpro`.**
+5. **`{:starter, Module}` includes are allowed and expanded by `start_pro`.**
    *(Confirmed.)* The resolver treats `{:starter, M}` and
    `{:starter, M, if: :f}` like `use`, getting the child steps from
    `M.steps()`. This extends de-duplication, cycle detection and origin tags
@@ -136,25 +136,25 @@ tasks manages the file.
    them off.
 
 8. **The engine adapter is a fixed module that reads from
-   `:persistent_term`.** `Startpro.Starter` implements the `Starter`
+   `:persistent_term`.** `StartPro.Starter` implements the `Starter`
    behaviour. Its `steps/0` reads the resolved list from `:persistent_term`,
    which the adapter sets before calling `Starter.Runner.run/3` and erases in
    an `after` block. This was chosen over generating a module with
    `Module.create/3`: it needs no runtime compilation and avoids "redefining
-   module" warnings. `startpro` has already expanded every include, so the
+   module" warnings. `start_pro` has already expanded every include, so the
    runner sees a flat list of leaf steps. The only exception is an unloadable
    `{:starter, M}` passed through under decision 5.
 
-9. **`startpro.run` is an `Igniter.Mix.Task`.** This gives it Igniter's diff,
+9. **`start_pro.run` is an `Igniter.Mix.Task`.** This gives it Igniter's diff,
    confirmation and `--yes`/`--dry-run` handling. Its `info/2` receives
    `argv`, so it can resolve the profile early and publish a boolean schema
    entry for every flag. The flag set is the gate flags from decision 4
    combined with `Starter.flags/1` of the resolved steps. The profile is an
    Igniter positional argument.
 
-10. **Config path precedence: `-c/--config`, then `STARTPRO_CONFIG`, then
-    `$XDG_CONFIG_HOME/startpro/profiles.exs`, then
-    `~/.config/startpro/profiles.exs`.** *(Confirmed.)*
+10. **Config path precedence: `-c/--config`, then `START_PRO_CONFIG`, then
+    `$XDG_CONFIG_HOME/start_pro/profiles.exs`, then
+    `~/.config/start_pro/profiles.exs`.** *(Confirmed.)*
 
 11. **Profile names are matched without creating atoms.** A name typed on the
     command line is compared with each config key's `Atom.to_string/1` form,
@@ -178,14 +178,14 @@ tasks manages the file.
     - Losing upstream's single diff for the whole run.
 
     That trade isn't worth making in v1. What v1 does instead:
-    - After `Starter.Runner.run/3` returns, `startpro.run` queues its own
+    - After `Starter.Runner.run/3` returns, `start_pro.run` queues its own
       internal task with `Igniter.add_task/3`. Igniter runs queued tasks only
       after the diff is applied, in the order they were queued, so this one
       runs **last**, after any `{:queue, ...}` steps from the profile. If the
       run is a dry run or the user declines the diff, the task doesn't run.
-    - That task is `mix startpro.git.commit --message-file <tmp>`. It runs
+    - That task is `mix start_pro.git.commit --message-file <tmp>`. It runs
       `git add -A` and then `git commit -F <tmp>`. The message's subject is
-      `startpro: apply profile <name>`. The body is plain lines (not bullets)
+      `start_pro: apply profile <name>`. The body is plain lines (not bullets)
       giving the config path, the flags passed, and the numbered resolved
       steps with their origins. This keeps the documentation benefit that the
       spec's UX note wanted.
@@ -210,9 +210,9 @@ tasks manages the file.
     - **Example commit message:**
 
       ```
-      startpro: apply profile standard_app
+      start_pro: apply profile standard_app
 
-      Config: /home/andy/.config/startpro/profiles.exs
+      Config: /home/andy/.config/start_pro/profiles.exs
       Flags: --oban-pro
 
       Steps:
@@ -228,11 +228,11 @@ tasks manages the file.
 
 16. **No `mix starter.new` and no in-app starter module.** Upstream's
     `starter.new` only generates `lib/mix/tasks/<app>.starter.ex`, a
-    `Starter` module that `mix starter.run` later discovers. `startpro`
+    `Starter` module that `mix starter.run` later discovers. `start_pro`
     doesn't need either one:
-    - The engine adapter (`Startpro.Starter`, decision 8) is the `Starter`
-      module, and it lives in the `startpro` dep.
-    - `startpro.run` calls `Starter.Runner.run/3` directly.
+    - The engine adapter (`StartPro.Starter`, decision 8) is the `Starter`
+      module, and it lives in the `start_pro` dep.
+    - `start_pro.run` calls `Starter.Runner.run/3` directly.
     - The target app needs `starter` only as a dependency, for the runner and
       its built-in steps.
 
@@ -243,7 +243,7 @@ tasks manages the file.
 
 13. **Errors are data in the library and raised in the tasks.** Library
     functions return `{:ok, _} | {:error, reason}`. One function,
-    `Startpro.Error.message/1`, formats every reason, and the tasks call
+    `StartPro.Error.message/1`, formats every reason, and the tasks call
     `Mix.raise/1`.
 
 14. **The editor is launched through a `Port` with `:nouse_stdio`.** This lets
@@ -258,8 +258,8 @@ tasks manages the file.
 ## Implementation Steps
 
 1. **Project setup and dependencies**
-   - Files: `mix.exs`, `.formatter.exs`, `lib/startpro.ex`,
-     `test/startpro_test.exs`
+   - Files: `mix.exs`, `.formatter.exs`, `lib/start_pro.ex`,
+     `test/start_pro_test.exs`
    - Details:
      - Set `elixir: "~> 1.17"`.
      - Add `{:starter, "~> 0.5"}`, which brings in `igniter`, and
@@ -271,7 +271,7 @@ tasks manages the file.
      - Run `mix deps.get` and confirm the project compiles.
 
 2. **Error formatting**
-   - Files: `lib/startpro/error.ex`
+   - Files: `lib/start_pro/error.ex`
    - Details: A `message/1` function that formats each of these reasons:
      - `:config_not_found`
      - `{:config_eval, exception}`
@@ -288,10 +288,10 @@ tasks manages the file.
      path, e.g. `a -> b -> MyTeam.Baseline -> a`.
 
 3. **Config path resolution and loading**
-   - Files: `lib/startpro/config.ex`
+   - Files: `lib/start_pro/config.ex`
    - Details:
      - `path/1` applies decision 10, reading `System.get_env/1` for the
-       `STARTPRO_CONFIG` and `XDG_CONFIG_HOME` variables.
+       `START_PRO_CONFIG` and `XDG_CONFIG_HOME` variables.
      - `load/1` checks `File.regular?/1` first. It then runs
        `Code.eval_file/1`, rescuing syntax, tokenizer, compile and runtime
        errors into `{:config_eval, e}`.
@@ -305,7 +305,7 @@ tasks manages the file.
      - `find_profile/2` matches names as described in decision 11.
 
 4. **Profile resolver**
-   - Files: `lib/startpro/resolver.ex`
+   - Files: `lib/start_pro/resolver.ex`
    - Details: `resolve(profiles, name, flags: :all | keyword)` returns either
      `{:ok, %{steps: [entry], duplicates: [entry], gates: [flag]}}` or
      `{:error, reason}`. It runs a DFS over nodes of the form
@@ -328,15 +328,15 @@ tasks manages the file.
      metadata.
 
 5. **Engine adapter**
-   - Files: `lib/startpro/starter.ex`
+   - Files: `lib/start_pro/starter.ex`
    - Details: A module with `@behaviour Starter`. Its `steps/0` reads
-     `:persistent_term.get({Startpro, :steps}, [])`, and its
+     `:persistent_term.get({StartPro, :steps}, [])`, and its
      `run(igniter, steps, opts)` puts the list, calls `Starter.Runner.run/3`
      and erases the list in `try/after`. This is the only coupling to
      upstream runner internals.
 
 6. **Shared CLI helpers**
-   - Files: `lib/startpro/cli.ex`
+   - Files: `lib/start_pro/cli.ex`
    - Details:
      - Parse the `-c/--config` option.
      - `load_profile!/3` parses, loads, finds the profile, resolves it and
@@ -344,19 +344,19 @@ tasks manages the file.
      - Render entries with `inspect/2` using `pretty: true`, adding the origin
        and gates, e.g. `4. {:add, :oban}   [chat_app] if :oban`.
      - Check whether `-c` or `--config` collides with an Igniter global
-       option. If one does, use only `--config` for `startpro.run` and
+       option. If one does, use only `--config` for `start_pro.run` and
        document it.
 
 7. **Git helpers and internal commit task**
-   - Files: `lib/startpro/git.ex`, `lib/mix/tasks/startpro.git.commit.ex`
+   - Files: `lib/start_pro/git.ex`, `lib/mix/tasks/start_pro.git.commit.ex`
    - Details:
-     - `Startpro.Git.status/1` returns `:not_a_repo`, `:clean` or `:dirty`,
+     - `StartPro.Git.status/1` returns `:not_a_repo`, `:clean` or `:dirty`,
        using `git rev-parse --is-inside-work-tree` and
        `git status --porcelain`.
-     - `Startpro.Git.message/3` takes the profile, flags and entries and
+     - `StartPro.Git.message/3` takes the profile, flags and entries and
        builds the commit text: a subject under 72 characters, then plain-line
        body text with no bullets.
-     - `mix startpro.git.commit --message-file PATH` runs `git add -A` and
+     - `mix start_pro.git.commit --message-file PATH` runs `git add -A` and
        `git commit -F PATH`, then deletes the temp file. It reports but
        tolerates the "nothing to commit" case, which happens when the profile
        made no changes. Mark it `@moduledoc false`, with no `@shortdoc`, so
@@ -387,40 +387,40 @@ tasks manages the file.
      - Use only built-in upstream step names, so the template resolves
        without extra deps.
 
-9. **`mix startpro.config.init`**
-   - Files: `lib/mix/tasks/startpro.config.init.ex`
+9. **`mix start_pro.config.init`**
+   - Files: `lib/mix/tasks/start_pro.config.init.ex`
    - Details: Resolves the path and refuses if the file exists, unless
      `--force` is given. It runs `File.mkdir_p!` on the parent directory, then
      copies the template from
-     `Application.app_dir(:startpro, "priv/templates/profiles.exs")`. Finally
+     `Application.app_dir(:start_pro, "priv/templates/profiles.exs")`. Finally
      it prints the path and suggests `config.edit`.
 
-10. **`mix startpro.config.edit`**
-    - Files: `lib/mix/tasks/startpro.config.edit.ex`, `lib/startpro/editor.ex`
+10. **`mix start_pro.config.edit`**
+    - Files: `lib/mix/tasks/start_pro.config.edit.ex`, `lib/start_pro/editor.ex`
     - Details: Resolves the path. If the file is missing, it raises with a
       hint to run `config.init`. It uses `$EDITOR`, then `$VISUAL`, and
-      raises if neither is set. `Startpro.Editor.open/2` runs
+      raises if neither is set. `StartPro.Editor.open/2` runs
       `sh -c '$EDITOR "$1"' -- file` through a `Port` with
       `[:nouse_stdio, :exit_status]`, and a non-zero exit raises. After the
       edit, it re-loads the file and resolves every profile with
       `flags: :all`. If validation fails, it prints a warning but does not
       fail.
 
-11. **`mix startpro.list.profiles`**
-    - Files: `lib/mix/tasks/startpro.list.profiles.ex`
+11. **`mix start_pro.list.profiles`**
+    - Files: `lib/mix/tasks/start_pro.list.profiles.ex`
     - Details: Prints a header with the config path, then one line per
       profile in config order, with its direct includes and gates, e.g.
       `standard_app  (uses: phoenix_cleanup, tooling, deploy_gigalixir if :gigalixir, finish)`.
 
-12. **`mix startpro.list.steps <PROFILE>`**
-    - Files: `lib/mix/tasks/startpro.list.steps.ex`
+12. **`mix start_pro.list.steps <PROFILE>`**
+    - Files: `lib/mix/tasks/start_pro.list.steps.ex`
     - Details: Takes exactly one positional argument. It resolves with
       `flags: :all` and prints the numbered entries with their origin and
       gates. The footer lists the available flags and each de-duplicated step
       with the profile it was dropped from. It must not touch Igniter.
 
-13. **`mix startpro.run <PROFILE>`**
-    - Files: `lib/mix/tasks/startpro.run.ex`
+13. **`mix start_pro.run <PROFILE>`**
+    - Files: `lib/mix/tasks/start_pro.run.ex`
     - Details: `use Igniter.Mix.Task`.
       - `info(argv, _)` pre-parses `argv` for the config and the profile. It
         resolves with `flags: :all`, raising on any error, and returns an
@@ -433,16 +433,16 @@ tasks manages the file.
       - `igniter/1`:
         1. Re-resolve with `flags: :all` as a validation pass, then again with
            `flags: igniter.args.options`.
-        2. Unless `--no-commit` was given, call `Startpro.Git.status/1` and
+        2. Unless `--no-commit` was given, call `StartPro.Git.status/1` and
            `Mix.raise` on `:not_a_repo` or `:dirty`, as described in
            decision 12. This must happen before step 3, so that nothing
            reaches disk.
-        3. Call `Startpro.Starter.run/3`.
+        3. Call `StartPro.Starter.run/3`.
         4. If committing, write the message to a temp file with
            `System.tmp_dir!/0` and a unique name, and run
-           `Igniter.add_task(igniter, "startpro.git.commit",
+           `Igniter.add_task(igniter, "start_pro.git.commit",
            ["--message-file", path])`.
-      - In the moduledoc, document three things: `startpro` and `starter`
+      - In the moduledoc, document three things: `start_pro` and `starter`
         must both be deps of the target app, `starter.new` is not needed, and
         how the commit behavior works.
 
@@ -470,11 +470,11 @@ tasks manages the file.
       Each public task also needs `@shortdoc`.
 
 15. **Tests** (see Testing Strategy)
-    - Files: `test/startpro/config_test.exs`,
-      `test/startpro/resolver_test.exs`, `test/startpro/git_test.exs`,
-      `test/mix/tasks/startpro_config_test.exs`,
-      `test/mix/tasks/startpro_list_test.exs`,
-      `test/mix/tasks/startpro_run_test.exs`, `test/support/fixtures/*.exs`,
+    - Files: `test/start_pro/config_test.exs`,
+      `test/start_pro/resolver_test.exs`, `test/start_pro/git_test.exs`,
+      `test/mix/tasks/start_pro_config_test.exs`,
+      `test/mix/tasks/start_pro_list_test.exs`,
+      `test/mix/tasks/start_pro_run_test.exs`, `test/support/fixtures/*.exs`,
       and `test/support/fake_starter.ex` (a `Starter` module used to test
       `{:starter, M}` expansion)
 
@@ -526,11 +526,11 @@ tasks manages the file.
 - **Evaluating arbitrary code:** accepted by design. Document it, and only
   evaluate the config inside tasks.
 - **Upstream API drift:** `Starter.Runner.run/3` and `Starter.flags/1` could
-  change. Pin `~> 0.5`, keep all coupling in `Startpro.Starter`, and cover it
+  change. Pin `~> 0.5`, keep all coupling in `StartPro.Starter`, and cover it
   with the integration test.
 - **Igniter queued-task semantics:** confirm that `add_task` runs only after a
   confirmed apply, is skipped on `--dry-run` or a declined diff, and runs as a
-  subprocess in the target app. `startpro` is a dep there, so the task
+  subprocess in the target app. `start_pro` is a dep there, so the task
   exists. If the task does run on a declined diff, the commit task finds
   nothing to commit, which is harmless.
 - **A dirty tree would mix the user's changes into the commit:** the run
@@ -540,7 +540,7 @@ tasks manages the file.
   error gives the exact fix, `git init && git add -A && git commit -m
   "Initial commit"`, or suggests `--no-commit`. The README quick start
   includes this step.
-- **The git binary is missing:** `Startpro.Git.status/1` treats this as
+- **The git binary is missing:** `StartPro.Git.status/1` treats this as
   `:not_a_repo`, so the run refuses unless `--no-commit` is passed.
 - **Untracked files count as dirty:** this matches the `/gen-feat` workflow
   and `git status --porcelain`. Ignored files (those in `.gitignore`) do not
@@ -564,7 +564,7 @@ tasks manages the file.
   - an empty file, a non-list value, and a non-atom key;
   - duplicate profiles;
   - a malformed `{:use, "x"}` and a `{:use, :x, if: [:a, :b]}`;
-  - path precedence across `-c`, `STARTPRO_CONFIG`, `XDG_CONFIG_HOME` and
+  - path precedence across `-c`, `START_PRO_CONFIG`, `XDG_CONFIG_HOME` and
     the default. Tests that change environment variables restore them and
     run with `async: false`.
 - **Resolver unit tests** (in-memory profiles, plus `FakeStarter`):
@@ -585,7 +585,7 @@ tasks manages the file.
   - `status/1` reports `:not_a_repo`, `:clean` and `:dirty` correctly;
   - `message/3` output has a subject under 72 characters and no bullet
     lines;
-  - `startpro.git.commit` creates a commit with the expected message, and
+  - `start_pro.git.commit` creates a commit with the expected message, and
     tolerates having nothing to commit.
 - **Task tests** use `Mix.Tasks.*.run/1`, `CaptureIO` and tmp dirs:
   - `config.init` writes a file, every template profile resolves under
@@ -595,13 +595,13 @@ tasks manages the file.
   - unknown profiles and cycles raise `Mix.Error`;
   - `config.edit` with `EDITOR=true` and with no editor set.
 - **Run integration test** uses `Igniter.Test.test_project/0` and
-  `Igniter.compose_task("startpro.run", [...])`:
+  `Igniter.compose_task("start_pro.run", [...])`:
   - use only built-in `:gen`/`:remove` steps, because installs are inert in
     test mode;
   - assert file changes for a resolved profile;
   - a flagged step and a gated `use` are each skipped without their flag and
     applied with it;
-  - a `startpro.git.commit` task is queued when committing is enabled, and
+  - a `start_pro.git.commit` task is queued when committing is enabled, and
     none is queued with `--no-commit`. Use Igniter's test assertions for
     queued tasks if they exist, otherwise inspect `igniter.tasks`;
   - the run raises `Mix.Error` when the directory is not a repo or the tree
@@ -609,7 +609,7 @@ tasks manages the file.
     check, or run inside a tmp-dir repo, so the test doesn't depend on the
     real working tree.
 - **Manual checks** in a fresh `mix phx.new` app that is a git repo, with
-  `startpro` as a `path:` dep:
+  `start_pro` as a `path:` dep:
   - run `config.init`, `config.edit` (in vim), `list.profiles`,
     `list.steps standard_app`, and `run standard_app --dry-run`;
   - then run `run standard_app`, check that exactly one commit is created,
@@ -629,7 +629,7 @@ queued-task semantics and option name collisions (see Edge Cases & Risks).
 - One commit per run is enough, and there's no `--commit-each` mode. The
   commit message lists every resolved step.
 - De-duplication treats steps that differ only in `if:` as distinct.
-- `mix starter.new` is not used. `startpro` needs `starter` only as a
+- `mix starter.new` is not used. `start_pro` needs `starter` only as a
   dependency (decision 16).
 
 ### Resolved (first round)
@@ -638,7 +638,7 @@ queued-task semantics and option name collisions (see Edge Cases & Risks).
   winning.
 - Flag-gated `{:use, :name, if: :flag}` is in v1.
 - `{:starter, Module}` includes are allowed.
-- `STARTPRO_CONFIG` and `XDG_CONFIG_HOME` are both supported.
+- `START_PRO_CONFIG` and `XDG_CONFIG_HOME` are both supported.
 - The minimum Elixir version drops to `~> 1.17`.
 - The package is distributed with `path:`/`git:` only, not Hex.
 - The template is modeled on the file `starter.new` generates.

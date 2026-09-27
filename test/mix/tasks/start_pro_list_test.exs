@@ -1,9 +1,9 @@
-defmodule Mix.Tasks.Startpro.ListTest do
+defmodule Mix.Tasks.StartPro.ListTest do
   use ExUnit.Case, async: true
 
   import ExUnit.CaptureIO
 
-  alias Mix.Tasks.Startpro.List
+  alias Mix.Tasks.StartPro.List
 
   @moduletag :tmp_dir
 

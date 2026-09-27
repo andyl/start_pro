@@ -1,4 +1,4 @@
-defmodule Startpro.Resolver do
+defmodule StartPro.Resolver do
   @moduledoc """
   Expands a profile's includes into one flat, acyclic, de-duplicated step
   list.
@@ -43,7 +43,7 @@ defmodule Startpro.Resolver do
   evaluates those.
   """
 
-  alias Startpro.Error
+  alias StartPro.Error
 
   @type entry :: %{step: term(), origin: atom(), gates: [atom()]}
   @type result :: %{steps: [entry()], duplicates: [entry()], gates: [atom()]}
@@ -55,7 +55,7 @@ defmodule Startpro.Resolver do
   Returns `{:ok, %{steps: entries, duplicates: entries, gates: flags}}`, where
   `gates` lists every include flag encountered.
   """
-  @spec resolve(Startpro.Config.profiles(), atom(), keyword()) ::
+  @spec resolve(StartPro.Config.profiles(), atom(), keyword()) ::
           {:ok, result()} | {:error, Error.reason()}
   def resolve(profiles, name, opts \\ []) do
     state = %{
@@ -84,7 +84,7 @@ defmodule Startpro.Resolver do
   Resolves every profile with `flags: :all`, returning the first error.
   Used to validate a whole config file.
   """
-  @spec validate_all(Startpro.Config.profiles()) :: :ok | {:error, Error.reason()}
+  @spec validate_all(StartPro.Config.profiles()) :: :ok | {:error, Error.reason()}
   def validate_all(profiles) do
     Enum.reduce_while(profiles, :ok, fn {name, _steps}, :ok ->
       case resolve(profiles, name, flags: :all) do
@@ -98,7 +98,7 @@ defmodule Startpro.Resolver do
   Returns the direct includes of profile `name`, in order, as
   `{:profile | :starter, target, flag_or_nil}`.
   """
-  @spec uses(Startpro.Config.profiles(), atom()) :: [include()]
+  @spec uses(StartPro.Config.profiles(), atom()) :: [include()]
   def uses(profiles, name) do
     profiles
     |> Keyword.get(name, [])
@@ -205,13 +205,13 @@ defmodule Startpro.Resolver do
   end
 
   defp step({:use, target} = step, origin, gates, state) do
-    if Startpro.Config.invalid_use?(step),
+    if StartPro.Config.invalid_use?(step),
       do: {:error, {:invalid_use, origin, step}},
       else: include({:profile, target}, nil, step, origin, gates, state)
   end
 
   defp step({:use, target, opts} = step, origin, gates, state) do
-    if Startpro.Config.invalid_use?(step),
+    if StartPro.Config.invalid_use?(step),
       do: {:error, {:invalid_use, origin, step}},
       else: include({:profile, target}, opts[:if], step, origin, gates, state)
   end
@@ -226,7 +226,7 @@ defmodule Startpro.Resolver do
   end
 
   defp step(step, origin, gates, state) do
-    if Startpro.Config.invalid_use?(step) do
+    if StartPro.Config.invalid_use?(step) do
       {:error, {:invalid_use, origin, step}}
     else
       {:ok, emit(state, step, origin, gates)}

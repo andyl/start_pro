@@ -1,12 +1,12 @@
-defmodule Mix.Tasks.Startpro.List.Steps do
+defmodule Mix.Tasks.StartPro.List.Steps do
   @shortdoc "Shows a profile's fully resolved step list"
 
   @moduledoc """
   Shows the fully expanded, numbered step list of a profile, with the
   profile each step came from and the include flags that gate it.
 
-      $ mix startpro.list.steps standard_app
-      Profile standard_app (/home/you/.config/startpro/profiles.exs):
+      $ mix start_pro.list.steps standard_app
+      Profile standard_app (/home/you/.config/start_pro/profiles.exs):
 
          1. {:remove, :daisy_ui}  [phoenix_cleanup]
          2. {:add, :credo}  [tooling]
@@ -26,7 +26,7 @@ defmodule Mix.Tasks.Startpro.List.Steps do
 
   use Mix.Task
 
-  alias Startpro.{CLI, Error, Resolver}
+  alias StartPro.{CLI, Error, Resolver}
 
   @impl Mix.Task
   def run(argv) do
@@ -35,7 +35,7 @@ defmodule Mix.Tasks.Startpro.List.Steps do
     name =
       case args do
         [name] -> name
-        _ -> Mix.raise("Usage: mix startpro.list.steps PROFILE")
+        _ -> Mix.raise("Usage: mix start_pro.list.steps PROFILE")
       end
 
     %{path: path, name: name, result: result} = CLI.load_profile!(opts[:config], name, :all)

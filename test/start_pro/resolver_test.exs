@@ -1,8 +1,8 @@
-defmodule Startpro.ResolverTest do
+defmodule StartPro.ResolverTest do
   use ExUnit.Case, async: true
 
-  alias Startpro.Resolver
-  alias Startpro.Test.{CyclicStarter, FakeStarter, NestedStarter, NotAStarter}
+  alias StartPro.Resolver
+  alias StartPro.Test.{CyclicStarter, FakeStarter, NestedStarter, NotAStarter}
 
   defp resolve(profiles, name, flags \\ :all) do
     Resolver.resolve(profiles, name, flags: flags)
@@ -163,8 +163,8 @@ defmodule Startpro.ResolverTest do
       profiles = [loop: [{:starter, CyclicStarter}]]
       assert {:error, {:cycle, [:loop, CyclicStarter, :loop]}} = resolve(profiles, :loop)
 
-      assert Startpro.Error.message({:cycle, [:loop, CyclicStarter, :loop]}) ==
-               "Include cycle: loop -> Startpro.Test.CyclicStarter -> loop"
+      assert StartPro.Error.message({:cycle, [:loop, CyclicStarter, :loop]}) ==
+               "Include cycle: loop -> StartPro.Test.CyclicStarter -> loop"
     end
 
     test "a missing include target" do

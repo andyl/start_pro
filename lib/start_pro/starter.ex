@@ -1,4 +1,4 @@
-defmodule Startpro.Starter do
+defmodule StartPro.Starter do
   @moduledoc """
   The engine adapter: a fixed `Starter` module whose steps are whatever list
   `run/3` was given.
@@ -12,7 +12,7 @@ defmodule Startpro.Starter do
 
   @behaviour Starter
 
-  @key {Startpro, :steps}
+  @key {StartPro, :steps}
 
   @impl Starter
   def steps, do: :persistent_term.get(@key, [])

@@ -1,15 +1,15 @@
-defmodule Mix.Tasks.Startpro.Config.Init do
-  @shortdoc "Creates the startpro profiles config file"
+defmodule Mix.Tasks.StartPro.Config.Init do
+  @shortdoc "Creates the start_pro profiles config file"
 
   @moduledoc """
   Creates the profiles config file from a commented template.
 
-      mix startpro.config.init
-      mix startpro.config.init -c ~/dotfiles/startpro.exs
-      mix startpro.config.init --force
+      mix start_pro.config.init
+      mix start_pro.config.init -c ~/dotfiles/start_pro.exs
+      mix start_pro.config.init --force
 
   The file is written to the path resolved as described in
-  `Startpro.Config`. An existing file is never overwritten unless `--force`
+  `StartPro.Config`. An existing file is never overwritten unless `--force`
   is given.
 
   ## Options
@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Startpro.Config.Init do
 
   use Mix.Task
 
-  alias Startpro.{CLI, Config}
+  alias StartPro.{CLI, Config}
 
   @impl Mix.Task
   def run(argv) do
@@ -39,7 +39,7 @@ defmodule Mix.Tasks.Startpro.Config.Init do
 
     Edit it with:
 
-        mix startpro.config.edit
+        mix start_pro.config.edit
     """)
   end
 end

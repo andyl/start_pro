@@ -6,7 +6,7 @@
     "{mix,.formatter}.exs",
     "{config,lib}/**/*.{ex,exs}",
     "test/*.exs",
-    "test/{startpro,mix}/**/*.exs",
+    "test/{start_pro,mix}/**/*.exs",
     "test/support/*.ex"
   ]
 ]

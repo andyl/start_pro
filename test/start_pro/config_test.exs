@@ -1,8 +1,8 @@
-defmodule Startpro.ConfigTest do
-  # Changes STARTPRO_CONFIG / XDG_CONFIG_HOME.
+defmodule StartPro.ConfigTest do
+  # Changes START_PRO_CONFIG / XDG_CONFIG_HOME.
   use ExUnit.Case, async: false
 
-  alias Startpro.Config
+  alias StartPro.Config
 
   @fixtures Path.expand("../support/fixtures", __DIR__)
 
@@ -80,7 +80,7 @@ defmodule Startpro.ConfigTest do
   describe "path/1" do
     setup do
       saved =
-        for var <- ~w(STARTPRO_CONFIG XDG_CONFIG_HOME), into: %{}, do: {var, System.get_env(var)}
+        for var <- ~w(START_PRO_CONFIG XDG_CONFIG_HOME), into: %{}, do: {var, System.get_env(var)}
 
       on_exit(fn ->
         Enum.each(saved, fn
@@ -89,27 +89,27 @@ defmodule Startpro.ConfigTest do
         end)
       end)
 
-      System.delete_env("STARTPRO_CONFIG")
+      System.delete_env("START_PRO_CONFIG")
       System.delete_env("XDG_CONFIG_HOME")
       :ok
     end
 
     test "applies the precedence order" do
-      assert Config.path(nil) == Path.expand("~/.config/startpro/profiles.exs")
+      assert Config.path(nil) == Path.expand("~/.config/start_pro/profiles.exs")
 
       System.put_env("XDG_CONFIG_HOME", "/xdg")
-      assert Config.path(nil) == "/xdg/startpro/profiles.exs"
+      assert Config.path(nil) == "/xdg/start_pro/profiles.exs"
 
-      System.put_env("STARTPRO_CONFIG", "/env/p.exs")
+      System.put_env("START_PRO_CONFIG", "/env/p.exs")
       assert Config.path(nil) == "/env/p.exs"
 
       assert Config.path("/flag/p.exs") == "/flag/p.exs"
     end
 
     test "empty environment variables are ignored" do
-      System.put_env("STARTPRO_CONFIG", "")
+      System.put_env("START_PRO_CONFIG", "")
       System.put_env("XDG_CONFIG_HOME", "")
-      assert Config.path(nil) == Path.expand("~/.config/startpro/profiles.exs")
+      assert Config.path(nil) == Path.expand("~/.config/start_pro/profiles.exs")
     end
   end
 end

@@ -1,9 +1,9 @@
-defmodule Startpro.MixProject do
+defmodule StartPro.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :startpro,
+      app: :start_pro,
       version: "0.1.0",
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),

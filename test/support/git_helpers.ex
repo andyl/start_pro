@@ -1,4 +1,4 @@
-defmodule Startpro.Test.GitHelpers do
+defmodule StartPro.Test.GitHelpers do
   @moduledoc false
 
   @doc "Initializes a git repo with one commit in `dir`."

@@ -1,12 +1,12 @@
-defmodule Mix.Tasks.Startpro.List.Profiles do
-  @shortdoc "Lists the profiles in the startpro config file"
+defmodule Mix.Tasks.StartPro.List.Profiles do
+  @shortdoc "Lists the profiles in the start_pro config file"
 
   @moduledoc """
   Lists every profile in the config file, in config order, with the profiles
   and starter modules it includes directly.
 
-      $ mix startpro.list.profiles
-      Profiles in /home/you/.config/startpro/profiles.exs:
+      $ mix start_pro.list.profiles
+      Profiles in /home/you/.config/start_pro/profiles.exs:
 
         phoenix_cleanup
         tooling
@@ -19,7 +19,7 @@ defmodule Mix.Tasks.Startpro.List.Profiles do
 
   use Mix.Task
 
-  alias Startpro.{CLI, Error, Resolver}
+  alias StartPro.{CLI, Error, Resolver}
 
   @impl Mix.Task
   def run(argv) do

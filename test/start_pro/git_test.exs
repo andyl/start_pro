@@ -1,17 +1,17 @@
-defmodule Startpro.GitTest do
+defmodule StartPro.GitTest do
   # File.cd! in the commit task tests changes the whole VM's cwd.
   use ExUnit.Case, async: false
 
-  import Startpro.Test.GitHelpers
+  import StartPro.Test.GitHelpers
 
-  alias Startpro.Git
+  alias StartPro.Git
 
   @moduletag :tmp_dir
 
   describe "status/1" do
     test "reports :not_a_repo, :clean and :dirty", %{tmp_dir: dir} do
       # tmp_dir lives inside this project's repo, so use one outside it.
-      outside = Path.join(System.tmp_dir!(), "startpro-#{System.unique_integer([:positive])}")
+      outside = Path.join(System.tmp_dir!(), "start_pro-#{System.unique_integer([:positive])}")
       File.mkdir_p!(outside)
       on_exit(fn -> File.rm_rf!(outside) end)
       assert Git.status(outside) == :not_a_repo
@@ -37,7 +37,7 @@ defmodule Startpro.GitTest do
     @entries [
       %{step: {:remove, :daisy_ui}, origin: :phoenix_cleanup, gates: []},
       %{step: {:add, :oban_pro, if: :oban_pro}, origin: :jobs, gates: []},
-      %{step: {:remove, :topbar}, origin: Startpro.Test.FakeStarter, gates: []}
+      %{step: {:remove, :topbar}, origin: StartPro.Test.FakeStarter, gates: []}
     ]
 
     test "builds the subject and plain-line body" do
@@ -45,7 +45,7 @@ defmodule Startpro.GitTest do
         Git.message(:standard_app, %{config: "/c/profiles.exs", flags: [:oban_pro]}, @entries)
 
       assert message == """
-             startpro: apply profile standard_app
+             start_pro: apply profile standard_app
 
              Config: /c/profiles.exs
              Flags: --oban-pro
@@ -53,7 +53,7 @@ defmodule Startpro.GitTest do
              Steps:
              1. {:remove, :daisy_ui} [phoenix_cleanup]
              2. {:add, :oban_pro, if: :oban_pro} [jobs]
-             3. {:remove, :topbar} [Startpro.Test.FakeStarter]
+             3. {:remove, :topbar} [StartPro.Test.FakeStarter]
              """
 
       refute message =~ ~r/^\s*[-*•] /m
@@ -74,11 +74,11 @@ defmodule Startpro.GitTest do
     end
   end
 
-  describe "mix startpro.git.commit" do
+  describe "mix start_pro.git.commit" do
     setup %{tmp_dir: dir} do
       init_repo!(dir)
       file = Path.join(dir, "../msg-#{System.unique_integer([:positive])}.txt")
-      File.write!(file, "startpro: apply profile x\n\nSteps:\n1. {:add, :credo} [x]\n")
+      File.write!(file, "start_pro: apply profile x\n\nSteps:\n1. {:add, :credo} [x]\n")
       %{msg_file: file}
     end
 
@@ -89,10 +89,10 @@ defmodule Startpro.GitTest do
       File.write!(Path.join(dir, "new.txt"), "x")
 
       ExUnit.CaptureIO.capture_io(fn ->
-        File.cd!(dir, fn -> Mix.Tasks.Startpro.Git.Commit.run(["--message-file", file]) end)
+        File.cd!(dir, fn -> Mix.Tasks.StartPro.Git.Commit.run(["--message-file", file]) end)
       end)
 
-      assert git!(dir, ["log", "-1", "--format=%B"]) =~ "startpro: apply profile x\n\nSteps:"
+      assert git!(dir, ["log", "-1", "--format=%B"]) =~ "start_pro: apply profile x\n\nSteps:"
       assert git!(dir, ["show", "--name-only", "--format="]) =~ "new.txt"
       assert Git.status(dir) == :clean
       refute File.exists?(file)
@@ -101,7 +101,7 @@ defmodule Startpro.GitTest do
     test "tolerates nothing to commit", %{tmp_dir: dir, msg_file: file} do
       output =
         ExUnit.CaptureIO.capture_io(fn ->
-          File.cd!(dir, fn -> Mix.Tasks.Startpro.Git.Commit.run(["--message-file", file]) end)
+          File.cd!(dir, fn -> Mix.Tasks.StartPro.Git.Commit.run(["--message-file", file]) end)
         end)
 
       assert output =~ "nothing to commit"

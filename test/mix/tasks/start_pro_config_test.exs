@@ -1,11 +1,11 @@
-defmodule Mix.Tasks.Startpro.ConfigTest do
+defmodule Mix.Tasks.StartPro.ConfigTest do
   # Changes EDITOR / VISUAL.
   use ExUnit.Case, async: false
 
   import ExUnit.CaptureIO
 
-  alias Mix.Tasks.Startpro.Config.{Edit, Init}
-  alias Startpro.{Config, Resolver}
+  alias Mix.Tasks.StartPro.Config.{Edit, Init}
+  alias StartPro.{Config, Resolver}
 
   @moduletag :tmp_dir
 
@@ -88,7 +88,7 @@ defmodule Mix.Tasks.Startpro.ConfigTest do
     test "raises with a hint when the file is missing", %{tmp_dir: dir} do
       System.put_env("EDITOR", "true")
 
-      assert_raise Mix.Error, ~r/startpro.config.init/, fn ->
+      assert_raise Mix.Error, ~r/start_pro.config.init/, fn ->
         Edit.run(["-c", Path.join(dir, "missing.exs")])
       end
     end

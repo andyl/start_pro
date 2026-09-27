@@ -1,14 +1,14 @@
-defmodule Startpro.CLI do
+defmodule StartPro.CLI do
   @moduledoc false
-  # Helpers shared by the mix startpro.* tasks: option parsing, loading and
+  # Helpers shared by the mix start_pro.* tasks: option parsing, loading and
   # resolving a profile (raising on error), and rendering entries.
 
-  alias Startpro.{Config, Error, Resolver}
+  alias StartPro.{Config, Error, Resolver}
 
   @config_switches [config: :string]
   @config_aliases [c: :config]
 
-  # Options of mix startpro.run and Igniter's global switches that take a
+  # Options of mix start_pro.run and Igniter's global switches that take a
   # value; every other --switch is a boolean.
   @value_switches ["--config", "-c", "--scribe", "--only"]
 

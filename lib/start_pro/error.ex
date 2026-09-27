@@ -1,6 +1,6 @@
-defmodule Startpro.Error do
+defmodule StartPro.Error do
   @moduledoc """
-  Formats the `{:error, reason}` values returned by `startpro`'s modules.
+  Formats the `{:error, reason}` values returned by `start_pro`'s modules.
 
   Library functions return errors as data; Mix tasks pass the reason to
   `message/1` and raise with `Mix.raise/1`.
@@ -29,7 +29,7 @@ defmodule Startpro.Error do
 
     Create it with:
 
-        mix startpro.config.init
+        mix start_pro.config.init
     """
   end
 
@@ -88,14 +88,14 @@ defmodule Startpro.Error do
   end
 
   def message({:reserved_flag, flag}) do
-    "Flag :#{flag} is reserved by mix startpro.run; rename the if: :#{flag} in your profiles"
+    "Flag :#{flag} is reserved by mix start_pro.run; rename the if: :#{flag} in your profiles"
   end
 
   def message({:editor_failed, editor, status}) do
     "Editor #{inspect(editor)} exited with status #{status}"
   end
 
-  def message(other), do: "startpro error: #{inspect(other)}"
+  def message(other), do: "start_pro error: #{inspect(other)}"
 
   @doc """
   Formats a profile name or module for display: profiles print bare

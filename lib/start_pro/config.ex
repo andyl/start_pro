@@ -1,13 +1,13 @@
-defmodule Startpro.Config do
+defmodule StartPro.Config do
   @moduledoc """
   Locates, loads and validates the profiles config file.
 
   The path is resolved in this order, first match wins:
 
     1. the `-c`/`--config` option
-    2. the `STARTPRO_CONFIG` environment variable
-    3. `$XDG_CONFIG_HOME/startpro/profiles.exs`
-    4. `~/.config/startpro/profiles.exs`
+    2. the `START_PRO_CONFIG` environment variable
+    3. `$XDG_CONFIG_HOME/start_pro/profiles.exs`
+    4. `~/.config/start_pro/profiles.exs`
 
   The file must evaluate to a keyword list, or a map with atom keys, of
   `profile_name => [step]`. Only `{:use, ...}` includes are validated here;
@@ -27,27 +27,27 @@ defmodule Startpro.Config do
 
   def path(_config) do
     cond do
-      env = present(System.get_env("STARTPRO_CONFIG")) ->
+      env = present(System.get_env("START_PRO_CONFIG")) ->
         Path.expand(env)
 
       xdg = present(System.get_env("XDG_CONFIG_HOME")) ->
-        Path.join([Path.expand(xdg), "startpro", "profiles.exs"])
+        Path.join([Path.expand(xdg), "start_pro", "profiles.exs"])
 
       true ->
-        Path.expand("~/.config/startpro/profiles.exs")
+        Path.expand("~/.config/start_pro/profiles.exs")
     end
   end
 
   @doc "Path of the default config template shipped in `priv/`."
   @spec template_path() :: Path.t()
-  def template_path, do: Application.app_dir(:startpro, "priv/templates/profiles.exs")
+  def template_path, do: Application.app_dir(:start_pro, "priv/templates/profiles.exs")
 
   @doc """
   Evaluates and validates the config file at `path`.
 
   Returns the profiles as an ordered list of `{name, steps}`.
   """
-  @spec load(Path.t()) :: {:ok, profiles()} | {:error, Startpro.Error.reason()}
+  @spec load(Path.t()) :: {:ok, profiles()} | {:error, StartPro.Error.reason()}
   def load(path) do
     if File.regular?(path) do
       with {:ok, term} <- eval(path), do: validate(term)
@@ -60,7 +60,7 @@ defmodule Startpro.Config do
   Validates an evaluated config term and normalizes it to an ordered list of
   `{name, steps}`. Keyword lists keep their order.
   """
-  @spec validate(term()) :: {:ok, profiles()} | {:error, Startpro.Error.reason()}
+  @spec validate(term()) :: {:ok, profiles()} | {:error, StartPro.Error.reason()}
   def validate(term) when is_map(term), do: term |> Map.to_list() |> validate_list(term)
   def validate(term) when is_list(term), do: validate_list(term, term)
   def validate(term), do: {:error, {:invalid_shape, term}}
@@ -72,7 +72,7 @@ defmodule Startpro.Config do
   `_` as equal, so no atoms are created from user input.
   """
   @spec find_profile(profiles(), String.t() | atom()) ::
-          {:ok, atom()} | {:error, Startpro.Error.reason()}
+          {:ok, atom()} | {:error, StartPro.Error.reason()}
   def find_profile(profiles, name) when is_atom(name),
     do: find_profile(profiles, Atom.to_string(name))
 

@@ -1,4 +1,4 @@
-defmodule Startpro.Editor do
+defmodule StartPro.Editor do
   @moduledoc """
   Opens a file in the user's editor.
 
@@ -28,7 +28,7 @@ defmodule Startpro.Editor do
   """
   @spec open(String.t(), Path.t()) :: :ok | {:error, {:editor_failed, String.t(), integer()}}
   def open(editor, file) do
-    launcher = Application.get_env(:startpro, :editor_launcher, &launch/2)
+    launcher = Application.get_env(:start_pro, :editor_launcher, &launch/2)
 
     case launcher.(editor, file) do
       0 -> :ok
