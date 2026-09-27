@@ -168,18 +168,18 @@ Success criteria:
 ## Open Questions
 
 - In diamond inclusions, should duplicate steps be de-duplicated (first
-  occurrence wins) or kept as written?
+  occurrence wins) or kept as written?  ANSWER: de-duplicate
 - What is the exact syntax of `use:` inside a profile? Options include a
   `{:use, :profile}` tuple placed inline in the step list, or a profile-level
   option (e.g. `chat_app: [use: [:base], steps: [...]]`). An inline tuple keeps
-  ordering explicit.
+  ordering explicit. ANSWER: I like the inline tuple
 - Should `startpro.run` record the resolved step list into the target app for
-  documentation? If so, where and in what form?
+  documentation? If so, where and in what form?  ANSWER: the git commit log should do this.  I think (hope) that the `starter` app does a git commit after each step.  Please check this.  If not: let's decide if we should let 'startpro.run' task do a git commit after each step.
 - Should profiles also be able to use `starter`'s `{:starter, Module}`
-  includes, or should `use:` be the only inclusion mechanism?
+  includes, or should `use:` be the only inclusion mechanism?  ANSWER: yes, let's allow for {:starter, Module} 
 - Should the `STARTER_CONFIG`-style env var from the earlier discussion be
-  supported (e.g. `STARTPRO_CONFIG`) in addition to `-c`?
-- What should the pre-populated profiles in `config.init` contain?
+  supported (e.g. `STARTPRO_CONFIG`) in addition to `-c`?  ANSWER: yes great idea - let's use STARTPRO_CONFIG environment variable
+- What should the pre-populated profiles in `config.init` contain?  ANSWER: something similar to what `starter` itself uses 
 
 ## Out of Scope
 

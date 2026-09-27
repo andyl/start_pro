@@ -1,4 +1,218 @@
 # Startpro
 
-Application profiles for Elixir Starter 
+Application profiles for Elixir [Starter](https://github.com/jamilabreu/starter).
 
+> **Status:** in development. This README describes the intended behavior.
+> See `_spec/features/260926_starter-profiles.md` and
+> `_spec/plans/260926_starter-profiles.md`.
+
+`startpro` is a companion package to `starter`. It lets you keep your starter
+step lists as named **profiles** in one config file outside your projects,
+such as `~/.config/startpro/profiles.exs`. You can then apply any profile to a
+new Phoenix app with a single command:
+
+```sh
+mix startpro.run standard_app
+```
+
+With upstream `starter`, you generate a starter module inside each app and
+copy it into the next project. With `startpro`, **the profile is the source of
+truth**, and **the app's git history is the record** of what was applied.
+
+## How it relates to `starter`
+
+`startpro` uses `starter`'s engine and built-in steps. It does **not** use
+`mix starter.new`, `mix starter.run`, or an in-app starter module:
+
+- `mix starter.new` only generates `lib/mix/tasks/<app>.starter.ex`, a starter
+  module that lives in your app. With `startpro`, your profiles live in the
+  config file, so you don't need that file.
+- `mix startpro.run` resolves your profile and hands the step list straight to
+  `starter`'s runner. You get the same single diff, the same confirmation
+  prompt, and the same built-in steps.
+- `starter` still has to be a dependency of the target app, because it
+  provides the runner and the built-in steps. Igniter runs inside the project,
+  so there's no way around that.
+
+If an app also has a `starter.new` file, the two don't interact. Running both
+would apply the steps twice, so pick one.
+
+## Installation
+
+`startpro` is not published on Hex. Add it next to `starter` as a dev-only
+dependency, from a local path or from git:
+
+```elixir
+def deps do
+  [
+    {:starter, "~> 0.5", only: :dev},
+    {:startpro, path: "~/src/Tool/startpro", only: :dev},
+    # or: {:startpro, git: "https://github.com/andyl/startpro", only: :dev}
+  ]
+end
+```
+
+It requires Elixir 1.17 or later.
+
+## Quick start
+
+```sh
+# once, anywhere: create your profiles file and edit it
+mix startpro.config.init
+mix startpro.config.edit
+
+# in a new app
+mix phx.new my_app && cd my_app
+git init && git add -A && git commit -m "Initial commit"
+# add :starter and :startpro to deps (see Installation), then:
+mix deps.get
+mix startpro.list.steps standard_app      # preview what will run
+mix startpro.run standard_app             # apply and commit
+```
+
+## The config file
+
+`startpro` looks for the config file in this order, using the first one it
+finds:
+
+1. `-c <path>` / `--config <path>` on the command line
+2. the `STARTPRO_CONFIG` environment variable
+3. `$XDG_CONFIG_HOME/startpro/profiles.exs`
+4. `~/.config/startpro/profiles.exs`
+
+Only one config file is used for any command.
+
+> **Warning:** the config file is Elixir code, and `startpro` evaluates it.
+> Only use a config file you wrote or trust.
+
+The file evaluates to a keyword list of `profile_name => [steps]`. Steps use
+exactly the syntax from `starter`'s docs, plus one addition, `{:use, ...}`:
+
+```elixir
+[
+  phoenix_cleanup: [
+    {:remove, :daisy_ui},
+    {:remove, :topbar}
+  ],
+  tooling: [
+    {:add, :credo},
+    {:add, :exsync, if: :exsync}
+  ],
+  finish: [
+    {:gen, :sort_deps}
+  ],
+  standard_app: [
+    {:use, :phoenix_cleanup},
+    {:use, :tooling},
+    {:use, :deploy_gigalixir, if: :gigalixir},
+    {:starter, MyTeam.Baseline},
+    MyTeam.Steps.Presence,
+    {:use, :finish}
+  ]
+]
+```
+
+### Including other profiles with `{:use, ...}`
+
+- `{:use, :name}` includes another profile's steps **in place**, at the
+  position where the `use` appears.
+- `{:use, :name, if: :flag}` includes it only when `--flag` is passed.
+- Includes can be nested to any depth. `{:starter, Module}` includes from
+  upstream `starter` work too.
+- **No cycles.** If `a` uses `b` and `b` uses `a`, you get an error that shows
+  the full path. `startpro` checks every include, including gated ones,
+  before anything runs.
+- **Every step runs once.** If a profile is included twice (for example, two
+  profiles both use `base`), its steps expand only at the first place it
+  appears. Exact duplicate steps are dropped, and the first one wins.
+  `mix startpro.list.steps` shows what was dropped.
+
+Because the first occurrence wins, put "finishing" steps like
+`{:gen, :sort_deps}` in their own profile and `use` it last. Don't put them
+inside a baseline profile.
+
+### Custom steps
+
+A profile can name a custom step module, such as `MyTeam.Steps.Presence`, but
+the step's code can't live in the config file. Put custom steps in their own
+package and add that package as a dev dependency of the target app.
+
+## Tasks
+
+All tasks accept `-c <path>` / `--config <path>`.
+
+| Task | What it does |
+|------|--------------|
+| `mix startpro.config.init` | Creates the config file with example profiles. Refuses to overwrite an existing file unless you pass `--force`. |
+| `mix startpro.config.edit` | Opens the config file in `$EDITOR` (or `$VISUAL`), then checks that it still loads. |
+| `mix startpro.list.profiles` | Lists every profile and the profiles it uses. |
+| `mix startpro.list.steps <PROFILE>` | Shows the fully expanded, numbered step list, with the profile each step came from. |
+| `mix startpro.run <PROFILE>` | Applies the profile to the current app and commits the result. Accepts a `--flag` for every `if:` in the profile, plus `--no-commit`. |
+
+## Git commits: how a run is recorded
+
+`mix startpro.run` records each run as **one git commit** in the target app.
+That commit replaces the in-app starter file you'd get from `starter.new`: it
+shows what was applied, from which profile, with which flags.
+
+### What happens during a run
+
+1. **Pre-flight check.** Before anything is written to disk, `startpro`
+   checks that the app is inside a git repository and that the working tree
+   is clean: no uncommitted, unstaged or untracked changes. If either check
+   fails, the run **refuses to start** and tells you how to fix it. Commit or
+   stash your changes, run `git init`, or pass `--no-commit`.
+2. **Apply.** `starter`'s runner applies the steps as usual. Dependencies are
+   fetched first, then you review one diff for the whole run and confirm it.
+3. **Commit.** After the changes are applied, `startpro` runs
+   `git add -A` and `git commit`. The commit runs last, after any queued
+   tasks from the profile.
+
+If you use `--dry-run` or decline the diff, nothing is applied and nothing is
+committed. Because the tree was clean at the start, the commit contains only
+what the run changed.
+
+### The commit message
+
+```
+startpro: apply profile standard_app
+
+Config: /home/andy/.config/startpro/profiles.exs
+Flags: --gigalixir
+
+Steps:
+1. {:remove, :daisy_ui} [phoenix_cleanup]
+2. {:remove, :topbar} [phoenix_cleanup]
+3. {:add, :credo} [tooling]
+4. {:gen, :gigalixir} [deploy_gigalixir]
+5. {:gen, :sort_deps} [finish]
+```
+
+Each step shows the profile it came from, so `git log` or `git show` tells
+you exactly how the app was set up.
+
+### One commit per run, not per step
+
+Igniter, which `starter` is built on, builds every step's changes in memory
+as one diff and writes them only after you confirm. Between steps nothing is
+on disk to commit. Committing after each step would need a separate Igniter
+run per step, which means a confirmation prompt, a compile and a dependency
+fetch every time. One commit per run, listing every step, gives the same
+record without that cost.
+
+### Opting out
+
+```sh
+mix startpro.run standard_app --no-commit
+```
+
+With `--no-commit`, `startpro` skips both the pre-flight git check and the
+commit, and behaves like plain `starter`.
+
+## Background
+
+This package grew out of
+[starter issue #4](https://github.com/jamilabreu/starter/issues/4). It differs
+from that proposal in three ways: it uses `.exs` instead of YAML, it calls a
+step list a "profile" instead of an "app", and it adds `{:use, ...}` for
+composing profiles.
