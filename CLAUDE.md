@@ -46,7 +46,7 @@ Data flow for `mix start_pro.run <PROFILE>`:
    `$XDG_CONFIG_HOME/start_pro/profiles.exs` → `~/.config/start_pro/profiles.exs`),
    `Code.eval_file`s it, and validates shape (keyword list or atom-keyed map of
    `name => [step]`). Only `:use` tuples are validated here; other step shapes
-   are left for the upstream runner.
+   are left for the upstream runner, except registry steps (below).
 2. `StartPro.Resolver` does a DFS over nodes `{:profile, name}` and
    `{:starter, module}` with separate "on-stack" and "done" sets (diamonds are
    not cycles). Returns entries `%{step:, origin:, gates:}` plus dropped
@@ -60,6 +60,11 @@ Data flow for `mix start_pro.run <PROFILE>`:
    `Starter` behaviour whose `steps/0` reads the resolved list from
    `:persistent_term` (set before `Starter.Runner.run/3`, erased in `after`).
    Chosen over `Module.create/3` to avoid runtime compilation.
+   Registry steps `{:add | :gen | :remove, :name, from: Registry}` are a
+   start_pro-only form (`StartPro.Registry`). They stay as written through
+   resolution, listing, de-dup and the commit message, and are translated to
+   `Mix.Tasks.<Registry>.<Kind>.<Name>` module steps (keeping `if:`) only
+   when handed to `StartPro.Starter.run/3`.
 4. `mix start_pro.run` is an `Igniter.Mix.Task` (single diff, confirm once,
    `--yes`/`--dry-run`). Its `info/2` resolves the profile from argv to publish
    a boolean option per flag. Unless `--no-commit`, it refuses to start if the

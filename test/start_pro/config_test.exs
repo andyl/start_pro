@@ -63,6 +63,21 @@ defmodule StartPro.ConfigTest do
     end
   end
 
+  describe "validate/1 with registry steps" do
+    test "accepts {kind, :name, from: Registry}" do
+      steps = [{:add, :ash, from: StartReg}, {:gen, :x, from: StartReg, if: :x}]
+      assert {:ok, [a: ^steps]} = Config.validate(a: steps)
+    end
+
+    test "rejects malformed registry steps" do
+      assert {:error, {:invalid_from, :a, {:install, :ash, _}}} =
+               Config.validate(a: [{:install, :ash, from: StartReg}])
+
+      assert {:error, {:invalid_from, :a, _}} =
+               Config.validate(a: [{:add, :ash, from: :start_reg}])
+    end
+  end
+
   describe "find_profile/2" do
     @profiles [standard_app: [], base: []]
 

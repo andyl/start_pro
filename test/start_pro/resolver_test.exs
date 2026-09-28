@@ -271,4 +271,26 @@ defmodule StartPro.ResolverTest do
       assert {:error, {:missing_use, :b, :c, _}} = Resolver.validate_all(a: [], b: [{:use, :c}])
     end
   end
+
+  describe "registry steps" do
+    test "stay as written, count their if: as a flag, and de-duplicate" do
+      profiles = [
+        a: [{:add, :ash, from: StartReg}, {:gen, :x, from: StartReg, if: :x}],
+        b: [{:use, :a}, {:add, :ash, from: StartReg}, {:add, :ash}]
+      ]
+
+      assert {:ok, result} = resolve(profiles, :b)
+
+      assert Resolver.steps_only(result) ==
+               [{:add, :ash, from: StartReg}, {:gen, :x, from: StartReg, if: :x}, {:add, :ash}]
+
+      assert [%{step: {:add, :ash, from: StartReg}, origin: :b}] = result.duplicates
+      assert Resolver.flags(result) == [:x]
+    end
+
+    test "malformed registry steps in starter modules are rejected" do
+      assert {:error, {:invalid_from, :a, _}} =
+               resolve([a: [{:gen, :x, from: :nope}]], :a)
+    end
+  end
 end

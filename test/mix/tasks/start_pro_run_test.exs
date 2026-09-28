@@ -15,7 +15,10 @@ defmodule Mix.Tasks.StartPro.RunTest do
     app: [{:use, :base}, {:gen, :ecto_force_drop, if: :force_drop}, {:queue, "foo.bar"}],
     gated: [{:use, :base}, {:use, :deploy, if: :deploy}],
     custom: [{:gen, :gitignore}, Not.A.Loaded.Step],
-    reserved: [{:gen, :gitignore, if: :yes}]
+    reserved: [{:gen, :gitignore, if: :yes}],
+    registry: [{:gen, :hello, from: FakeReg}, {:gen, :gitignore}],
+    registry_gated: [{:gen, :hello, from: FakeReg, if: :hello}],
+    registry_missing: [{:gen, :nope, from: FakeReg}]
   ]
   """
 
@@ -168,6 +171,26 @@ defmodule Mix.Tasks.StartPro.RunTest do
     assert_raise Mix.Error, ~r/Profile custom names Not.A.Loaded.Step/, fn ->
       run(["custom", "-c", config])
     end
+  end
+
+  test "registry steps run as their task module", %{config: config} do
+    run(["registry", "-c", config])
+    |> assert_creates("hello.txt", "hello\n")
+    |> assert_changed(".gitignore")
+  end
+
+  test "a registry step's if: becomes a flag", %{config: config} do
+    assert Mix.Tasks.StartPro.Run.info(["registry_gated", "-c", config], nil).schema[:hello] ==
+             :boolean
+
+    refute_creates(run(["registry_gated", "-c", config]), "hello.txt")
+    assert_creates(run(["registry_gated", "-c", config, "--hello"]), "hello.txt")
+  end
+
+  test "a registry step missing from the app names the step and module", %{config: config} do
+    assert_raise Mix.Error,
+                 ~r/names \{:gen, :nope, from: FakeReg\}, but\nMix.Tasks.FakeReg.Gen.Nope/,
+                 fn -> run(["registry_missing", "-c", config]) end
   end
 
   test "info/2 publishes a boolean per flag", %{config: config} do

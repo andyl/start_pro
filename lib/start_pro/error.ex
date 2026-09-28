@@ -15,9 +15,11 @@ defmodule StartPro.Error do
           | {:unknown_profile, String.t(), [atom()]}
           | {:missing_use, atom(), atom(), [atom()]}
           | {:invalid_use, atom(), term()}
+          | {:invalid_from, atom(), term()}
           | {:cycle, [atom()]}
           | {:not_a_starter, module()}
           | {:missing_module, atom(), module()}
+          | {:missing_registry_step, atom(), term(), module()}
           | {:reserved_flag, atom()}
           | {:editor_failed, String.t(), integer()}
 
@@ -71,6 +73,15 @@ defmodule StartPro.Error do
     """
   end
 
+  def message({:invalid_from, from, term}) do
+    """
+    Invalid registry step in #{name(from)}: #{inspect(term)}
+
+    Expected {:add | :gen | :remove, :name, from: Registry}, optionally with
+    if: :flag, where Registry is a module prefix such as StartReg.
+    """
+  end
+
   def message({:cycle, path}) do
     "Include cycle: " <> Enum.map_join(path, " -> ", &name/1)
   end
@@ -84,6 +95,15 @@ defmodule StartPro.Error do
     Profile #{name(from)} names #{inspect(module)}, which is not available in this app.
 
     Custom steps and starter modules must be dependencies of the target app.
+    """
+  end
+
+  def message({:missing_registry_step, from, step, module}) do
+    """
+    Profile #{name(from)} names #{StartPro.Resolver.format_step(step)}, but
+    #{inspect(module)} is not available in this app.
+
+    Check the step's name, and that its registry is a dependency of the target app.
     """
   end
 

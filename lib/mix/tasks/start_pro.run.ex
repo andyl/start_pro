@@ -44,7 +44,7 @@ defmodule Mix.Tasks.StartPro.Run do
 
   use Igniter.Mix.Task
 
-  alias StartPro.{CLI, Error, Git, Resolver}
+  alias StartPro.{CLI, Error, Git, Registry, Resolver}
 
   @base_schema [config: :string, no_commit: :boolean]
 
@@ -92,7 +92,8 @@ defmodule Mix.Tasks.StartPro.Run do
     check_modules!(active)
     if commit?, do: check_git!()
 
-    igniter = StartPro.Starter.run(igniter, Resolver.steps_only(result), opts)
+    steps = result |> Resolver.steps_only() |> Enum.map(&Registry.translate/1)
+    igniter = StartPro.Starter.run(igniter, steps, opts)
 
     if commit? do
       flags = Enum.filter(Resolver.flags(all), &(Keyword.get(opts, &1) == true))
@@ -132,14 +133,22 @@ defmodule Mix.Tasks.StartPro.Run do
     end
   end
 
-  # Custom step modules and unexpanded starters must be compiled into the
-  # target app; fail early, naming the profile, rather than mid-run.
+  # Custom step modules, registry steps and unexpanded starters must be
+  # compiled into the target app; fail early, naming the profile, rather
+  # than mid-run.
   defp check_modules!(entries) do
     Enum.each(entries, fn %{step: step, origin: origin} ->
-      module = step_module(step)
+      module = step |> Registry.translate() |> step_module()
 
-      if module && not Code.ensure_loaded?(module) do
-        Mix.raise(Error.message({:missing_module, origin, module}))
+      cond do
+        is_nil(module) or Code.ensure_loaded?(module) ->
+          :ok
+
+        Registry.registry_step?(step) ->
+          Mix.raise(Error.message({:missing_registry_step, origin, step, module}))
+
+        true ->
+          Mix.raise(Error.message({:missing_module, origin, module}))
       end
     end)
   end

@@ -10,8 +10,9 @@ defmodule StartPro.Config do
     4. `~/.config/start_pro/profiles.exs`
 
   The file must evaluate to a keyword list, or a map with atom keys, of
-  `profile_name => [step]`. Only `{:use, ...}` includes are validated here;
-  every other step shape is left to `Starter.Runner`.
+  `profile_name => [step]`. Only `{:use, ...}` includes and `from:` registry
+  steps are validated here; every other step shape is left to
+  `Starter.Runner`.
 
   > #### Warning {: .warning}
   >
@@ -110,6 +111,9 @@ defmodule StartPro.Config do
 
           invalid = Enum.find(steps, &invalid_use?/1) ->
             {:halt, {:error, {:invalid_use, name, invalid}}}
+
+          invalid = Enum.find(steps, &StartPro.Registry.invalid?/1) ->
+            {:halt, {:error, {:invalid_from, name, invalid}}}
 
           true ->
             {:cont, {:ok, [{name, steps} | acc], MapSet.put(seen, name)}}

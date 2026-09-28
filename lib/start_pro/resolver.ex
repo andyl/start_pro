@@ -226,10 +226,10 @@ defmodule StartPro.Resolver do
   end
 
   defp step(step, origin, gates, state) do
-    if StartPro.Config.invalid_use?(step) do
-      {:error, {:invalid_use, origin, step}}
-    else
-      {:ok, emit(state, step, origin, gates)}
+    cond do
+      StartPro.Config.invalid_use?(step) -> {:error, {:invalid_use, origin, step}}
+      StartPro.Registry.invalid?(step) -> {:error, {:invalid_from, origin, step}}
+      true -> {:ok, emit(state, step, origin, gates)}
     end
   end
 

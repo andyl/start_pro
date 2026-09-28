@@ -82,7 +82,8 @@ Only one config file is used for any command.
 > Only use a config file you wrote or trust.
 
 The file evaluates to a keyword list of `profile_name => [steps]`. Steps use
-exactly the syntax from `starter`'s docs, plus one addition, `{:use, ...}`:
+exactly the syntax from `starter`'s docs, plus two additions: `{:use, ...}`
+includes and `from:` registry steps:
 
 ```elixir
 [
@@ -103,6 +104,7 @@ exactly the syntax from `starter`'s docs, plus one addition, `{:use, ...}`:
     {:use, :deploy_gigalixir, if: :gigalixir},
     {:starter, MyTeam.Baseline},
     MyTeam.Steps.Presence,
+    {:add, :ash, from: StartReg},
     {:use, :finish}
   ]
 ]
@@ -126,6 +128,46 @@ exactly the syntax from `starter`'s docs, plus one addition, `{:use, ...}`:
 Because the first occurrence wins, put "finishing" steps like
 `{:gen, :sort_deps}` in their own profile and `use` it last. Don't put them
 inside a baseline profile.
+
+### Registry steps with `from:`
+
+A registry is a package of Igniter step tasks named
+`Mix.Tasks.<Registry>.<Kind>.<Name>`, such as
+[start_reg](https://github.com/andyl/start_reg). Instead of writing out the
+full module name, name the step by kind and name and say which registry it
+comes from:
+
+```elixir
+tooling: [
+  {:add, :ash, from: StartReg},                            # Mix.Tasks.StartReg.Add.Ash
+  {:add, :ash_phoenix, from: StartReg},                    # Mix.Tasks.StartReg.Add.AshPhoenix
+  {:gen, :xp_mix_completions, from: StartReg, if: :completions},
+  {:remove, :topbar, from: StartReg}                       # Mix.Tasks.StartReg.Remove.Topbar
+]
+```
+
+- The kind is `:add`, `:gen` or `:remove`, and it becomes the module segment
+  `Add`, `Gen` or `Remove`. The name is camelized, so `:ash_phoenix` becomes
+  `AshPhoenix`.
+- `from:` is the registry's module prefix, written as a module (`StartReg`),
+  not an atom (`:start_reg`). It is required. Without it, `{:add, :ash}` is
+  an ordinary `starter` step that goes to `starter`'s own step or the
+  package's upstream installer.
+- `if: :flag` works as on any other step and adds a `--flag` option.
+- The registry package must be a dependency of the target app, like any
+  custom step. `mix start_pro.run` checks that the task module exists before
+  it starts, and names the profile and the step if it doesn't.
+- Listings and the commit message show the step as you wrote it. Only
+  `starter`'s runner sees the translated module.
+
+This form is understood only by `start_pro`, not by upstream `starter`, so
+don't use it in `starter.new` files or in `{:starter, Module}` modules that
+`starter` might run on its own. Writing the module name out, e.g.
+`Mix.Tasks.StartReg.Add.Ash`, works in both.
+
+A malformed registry step fails when the config is loaded. That includes an
+unsupported kind, a `from:` that isn't a module, and an option other than
+`from:` or `if:`.
 
 ### Custom steps and starter modules
 

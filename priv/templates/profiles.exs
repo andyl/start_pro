@@ -25,6 +25,13 @@
 #                                 dependency of the target app; step code
 #                                 cannot live in this file.
 #
+# start_pro adds one more form, a step from a registry package such as
+# start_reg (https://github.com/andyl/start_reg):
+#
+#   * `{:add, :ash, from: StartReg}` - runs Mix.Tasks.StartReg.Add.Ash.
+#                                 The kind is :add, :gen or :remove; the
+#                                 registry must be a dependency of the app.
+#
 # Browse the built-in steps with `mix starter.add --list`,
 # `mix starter.remove --list` and `mix starter.gen --list`.
 #
