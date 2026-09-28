@@ -65,9 +65,11 @@ Data flow for `mix start_pro.run <PROFILE>`:
    resolution, listing, de-dup and the commit message, and are translated to
    `Mix.Tasks.<Registry>.<Kind>.<Name>` module steps (keeping `if:`) only
    when handed to `StartPro.Starter.run/3`.
-4. `mix start_pro.run` is an `Igniter.Mix.Task` (single diff, confirm once,
-   `--yes`/`--dry-run`). Its `info/2` resolves the profile from argv to publish
-   a boolean option per flag. Unless `--no-commit`, it refuses to start if the
+4. `mix start_pro.run` is an `Igniter.Mix.Task` (single diff). Its `run/1`
+   appends `--yes` to argv unless `--yes`/`--dry-run` is present, so runs are
+   unattended (argv, because the runner's dep fetch reads `--yes` there).
+   Its `info/2` resolves the profile from argv to publish a boolean option
+   per flag. Unless `--no-commit`, it refuses to start if the
    target isn't a git repo or the tree is dirty (checked before the runner's
    dep pre-fetch writes anything), then queues the internal
    `mix start_pro.git.commit --message-file <tmp>` via `Igniter.add_task/3` so

@@ -27,19 +27,26 @@ defmodule Mix.Tasks.StartPro.Run do
     1. refuses to start if the app is not inside a git work tree, or if the
        tree has uncommitted, unstaged or untracked changes. This is checked
        before anything is written, including the dependency fetch;
-    2. applies the steps as one diff, confirmed once;
+    2. applies the steps as one diff, without asking (see below);
     3. commits everything with `git add -A` and a message listing the config
        path, the flags, and every step with the profile it came from.
 
   The commit is a queued task, so it runs last, after any `{:queue, ...}`
-  steps, and only if the diff is applied. `--dry-run` or declining the diff
-  commits nothing.
+  steps, and only if the diff is applied. `--dry-run` commits nothing.
+
+  ## Unattended runs
+
+  The run always acts as if `--yes` were given: it applies the diff and
+  fetches dependencies without asking, so it goes through unattended. The
+  diff isn't shown; use `--dry-run` to preview it first (a dry run doesn't
+  add `--yes`, since Igniter hides the diff under it).
 
   ## Options
 
     * `-c`, `--config` - the config file path
     * `--no-commit` - skip the git checks and the commit
-    * `--dry-run`, `--yes` - as for any Igniter task
+    * `--dry-run` - as for any Igniter task
+    * `--yes` - implied unless `--dry-run` is given
   """
 
   use Igniter.Mix.Task
@@ -75,6 +82,16 @@ defmodule Mix.Tasks.StartPro.Run do
       aliases: [c: :config],
       example: "mix start_pro.run standard_app --gigalixir"
     }
+  end
+
+  # Always run as if --yes were given, so runs go through unattended. It goes
+  # into argv, not just the options, because the runner's dep fetch reads
+  # argv. A dry run is left alone: under --yes Igniter doesn't print the diff.
+  @impl Mix.Task
+  def run(argv) do
+    if Enum.any?(argv, &(&1 in ["--yes", "--dry-run"])),
+      do: super(argv),
+      else: super(argv ++ ["--yes"])
   end
 
   @impl Igniter.Mix.Task
